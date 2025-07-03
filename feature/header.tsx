@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger
 } from '@/component/dropdown-menu'
 import { useAuth } from '@/lib/hooks/useAuth'
+import { LoginRegisterModal } from '@/feature/LoginRegisterModal'
 
 export const Header = () => {
   const router = useRouter()
@@ -149,12 +150,12 @@ export const Header = () => {
               </DropdownMenu>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" asChild>
-                  <Link href="/user/login">登录</Link>
-                </Button>
-                <Button asChild>
-                  <Link href="/user/register">注册</Link>
-                </Button>
+                <LoginRegisterModal onSuccess={() => window.location.reload()}>
+                  <Button variant="ghost">登录</Button>
+                </LoginRegisterModal>
+                <LoginRegisterModal onSuccess={() => window.location.reload()}>
+                  <Button>注册</Button>
+                </LoginRegisterModal>
               </div>
             )}
 
@@ -249,16 +250,22 @@ export const Header = () => {
                 </div>
               ) : (
                 <div className="border-t border-gray-200 pt-4 space-y-2">
-                  <Button variant="ghost" asChild className="w-full justify-start">
-                    <Link href="/user/login" onClick={() => setIsMobileMenuOpen(false)}>
+                  <LoginRegisterModal onSuccess={() => {
+                    window.location.reload()
+                    setIsMobileMenuOpen(false)
+                  }}>
+                    <Button variant="ghost" className="w-full justify-start">
                       登录
-                    </Link>
-                  </Button>
-                  <Button asChild className="w-full justify-start">
-                    <Link href="/user/register" onClick={() => setIsMobileMenuOpen(false)}>
+                    </Button>
+                  </LoginRegisterModal>
+                  <LoginRegisterModal onSuccess={() => {
+                    window.location.reload()
+                    setIsMobileMenuOpen(false)
+                  }}>
+                    <Button className="w-full justify-start">
                       注册
-                    </Link>
-                  </Button>
+                    </Button>
+                  </LoginRegisterModal>
                 </div>
               )}
             </div>
