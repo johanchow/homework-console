@@ -1,10 +1,10 @@
 import type { Metadata } from 'next'
 import './global.css'
-import { Header } from '@/feature/header'
+import { Header } from '@/feature/Header'
 
 export const metadata: Metadata = {
-  title: '作业控制台',
-  description: '现代化的作业管理系统',
+  title: '自主学习',
+  description: '自主学习管理台',
 }
 
 export default function RootLayout({

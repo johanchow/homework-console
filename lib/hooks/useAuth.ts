@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { authAPI } from '@/lib/api/auth'
+import { userAPI } from '@/lib/api/user'
 
 export interface User {
   id: string
@@ -64,8 +64,8 @@ export function useAuth() {
   const login = useCallback(async (loginData: any, type: 'account' | 'phone') => {
     try {
       const response = type === 'account'
-        ? await authAPI.loginWithAccount(loginData)
-        : await authAPI.loginWithPhone(loginData)
+        ? await userAPI.loginWithAccount(loginData)
+        : await userAPI.loginWithPhone(loginData)
 
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
@@ -87,8 +87,8 @@ export function useAuth() {
   const register = useCallback(async (registerData: any, type: 'account' | 'phone') => {
     try {
       const response = type === 'account'
-        ? await authAPI.registerWithAccount(registerData)
-        : await authAPI.registerWithPhone(registerData)
+        ? await userAPI.registerWithAccount(registerData)
+        : await userAPI.registerWithPhone(registerData)
 
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
@@ -109,7 +109,7 @@ export function useAuth() {
   // 退出登录
   const logout = useCallback(async () => {
     try {
-      await authAPI.logout()
+      await userAPI.logout()
     } catch (error) {
       console.error('退出登录失败:', error)
     } finally {

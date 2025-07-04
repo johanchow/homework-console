@@ -4,8 +4,10 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  BookOpen,
-  FileText,
+  Target,
+  Brain,
+  Bot,
+  Eye,
   User,
   LogOut,
   Settings,
@@ -49,9 +51,10 @@ export const Header = () => {
   }
 
   const navigation = [
-    { name: '作业', href: '/homework', icon: BookOpen },
-    { name: '试卷', href: '/paper', icon: FileText },
-    { name: '考试', href: '/exam', icon: FileText },
+    { name: '学习目标', href: '/goal', icon: Target },
+    { name: '智能出题', href: '/question', icon: Brain },
+    { name: 'AI陪学', href: '/ai-tutor', icon: Bot },
+    { name: '学习进度', href: '/progress', icon: Eye },
   ]
 
   return (
@@ -62,9 +65,9 @@ export const Header = () => {
           <div className="flex items-center">
             <Link href="/" className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <BookOpen className="w-5 h-5 text-white" />
+                <Brain className="w-5 h-5 text-white" />
               </div>
-              <span className="text-xl font-bold text-gray-900">作业控制台</span>
+              <span className="text-xl font-bold text-gray-900">智能学习</span>
             </Link>
 
             {/* 桌面端导航 */}
@@ -89,7 +92,7 @@ export const Header = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="搜索作业、试卷..."
+                  placeholder="搜索学习内容、题目..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-full"
@@ -181,7 +184,7 @@ export const Header = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    placeholder="搜索作业、试卷..."
+                    placeholder="搜索学习内容、题目..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 w-full"

@@ -70,7 +70,7 @@ export interface AuthResponse {
 }
 
 // API 函数
-export const authAPI = {
+export const userAPI = {
   // 账号密码登录
   loginWithAccount: async (data: LoginAccountRequest): Promise<AuthResponse> => {
     return api.post('/auth/login/account', data)
@@ -107,4 +107,4 @@ export const authAPI = {
   },
 }
 
-export default authAPI
+export default userAPI
