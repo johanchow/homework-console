@@ -52,7 +52,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/component/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/component/opt-input'
 import { Checkbox } from '@/component/checkbox'
-import { authAPI } from '@/lib/api/auth'
+import { userAPI } from '@/lib/api/user'
 
 // 账号密码登录表单验证
 const accountLoginSchema = z.object({
@@ -149,7 +149,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await authAPI.loginWithAccount(data)
+      const response = await userAPI.loginWithAccount(data)
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
       setOpen(false)
@@ -167,7 +167,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await authAPI.loginWithPhone(data)
+      const response = await userAPI.loginWithPhone(data)
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
       setOpen(false)
@@ -185,7 +185,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await authAPI.registerWithAccount({
+      const response = await userAPI.registerWithAccount({
         username: data.username,
         email: data.email,
         password: data.password,
@@ -207,7 +207,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await authAPI.registerWithPhone({
+      const response = await userAPI.registerWithPhone({
         phone: data.phone,
         code: data.code,
       })
@@ -232,7 +232,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     }
 
     try {
-      await authAPI.sendVerificationCode(phone)
+      await userAPI.sendVerificationCode(phone)
       setCountdown(60)
       const timer = setInterval(() => {
         setCountdown((prev) => {
