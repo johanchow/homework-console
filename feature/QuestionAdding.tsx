@@ -4,7 +4,9 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
-import { Bot, Upload, Trash2 } from 'lucide-react'
+import { Upload, Trash2, Bot } from 'lucide-react'
+import { QuestionFromAI } from './QuestionFromAI'
+import { QuestionFromImport } from './QuestionFromImport'
 
 interface Question {
   id: number
@@ -54,45 +56,16 @@ const mockQuestions = [
 ]
 
 export function QuestionAdding({ goal, onQuestionsUpdated }: QuestionAddingProps) {
-  const [questions, setQuestions] = useState<Question[]>(goal.questions || mockQuestions)
+  const [questions, setQuestions] = useState<Question[]>(goal.questions || [])
 
-  const handleAIQuestion = () => {
-    // TODO: 实现AI出题逻辑
-    console.log('AI出题')
-    // 模拟添加新题目
-    const newQuestion: Question = {
-      id: Date.now(),
-      title: `AI生成的题目 ${questions.length + 1}`,
-      type: '选择题',
-      difficulty: '中等',
-      subject: '数学'
-    }
-    const updatedQuestions = [...questions, newQuestion]
+  const handleAIQuestionSelected = (question: Question) => {
+    const updatedQuestions = [...questions, question]
     setQuestions(updatedQuestions)
     onQuestionsUpdated(updatedQuestions)
   }
 
-  const handleSmartImport = () => {
-    // TODO: 实现智能录入逻辑
-    console.log('智能录入')
-    // 模拟批量添加题目
-    const newQuestions: Question[] = [
-      {
-        id: Date.now(),
-        title: '智能录入题目 1',
-        type: '填空题',
-        difficulty: '简单',
-        subject: '数学'
-      },
-      {
-        id: Date.now() + 1,
-        title: '智能录入题目 2',
-        type: '计算题',
-        difficulty: '困难',
-        subject: '数学'
-      }
-    ]
-    const updatedQuestions = [...questions, ...newQuestions]
+  const handleImportQuestionSelected = (question: Question) => {
+    const updatedQuestions = [...questions, question]
     setQuestions(updatedQuestions)
     onQuestionsUpdated(updatedQuestions)
   }
@@ -159,24 +132,26 @@ export function QuestionAdding({ goal, onQuestionsUpdated }: QuestionAddingProps
       <Card>
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={handleAIQuestion}
-              className="h-16 flex flex-col items-center justify-center space-y-2"
-            >
-              <Bot className="w-6 h-6" />
-              <span>AI出题</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              size="lg" 
-              onClick={handleSmartImport}
-              className="h-16 flex flex-col items-center justify-center space-y-2"
-            >
-              <Upload className="w-6 h-6" />
-              <span>智能录入</span>
-            </Button>
+            <QuestionFromAI onQuestionSelected={handleAIQuestionSelected}>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="h-16 flex flex-col items-center justify-center space-y-2"
+              >
+                <Bot className="w-6 h-6" />
+                <span>AI出题</span>
+              </Button>
+            </QuestionFromAI>
+            <QuestionFromImport onQuestionSelected={handleImportQuestionSelected}>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="h-16 flex flex-col items-center justify-center space-y-2"
+              >
+                <Upload className="w-6 h-6" />
+                <span>智能录入</span>
+              </Button>
+            </QuestionFromImport>
           </div>
         </CardContent>
       </Card>
