@@ -7,26 +7,11 @@ import { Badge } from '@/component/badge'
 import { Upload, Trash2, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
 import { QuestionFromImport } from './QuestionFromImport'
-
-interface Question {
-  id: number
-  title: string
-  type: string
-  difficulty: string
-  subject: string
-}
-
-interface Goal {
-  id?: number
-  name: string
-  questions: Question[]
-  assignees: any[]
-  startDate: string
-  endDate: string
-}
+import { Question } from '@/entity/question'
+import { QuestionType } from '@/entity/question'
 
 interface QuestionAddingProps {
-  goal: Goal
+  currentQuestions: Question[];
   onQuestionsUpdated: (questions: Question[]) => void
 }
 
@@ -55,8 +40,8 @@ const mockQuestions = [
   }
 ]
 
-export function QuestionAdding({ goal, onQuestionsUpdated }: QuestionAddingProps) {
-  const [questions, setQuestions] = useState<Question[]>(goal.questions || [])
+export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: QuestionAddingProps) {
+  const [questions, setQuestions] = useState<Question[]>(currentQuestions)
 
   const handleAIQuestionSelected = (question: Question) => {
     const updatedQuestions = [...questions, question]
@@ -70,10 +55,19 @@ export function QuestionAdding({ goal, onQuestionsUpdated }: QuestionAddingProps
     onQuestionsUpdated(updatedQuestions)
   }
 
-  const handleDeleteQuestion = (questionId: number) => {
+  const handleDeleteQuestion = (questionId: string) => {
     const updatedQuestions = questions.filter(q => q.id !== questionId)
     setQuestions(updatedQuestions)
     onQuestionsUpdated(updatedQuestions)
+  }
+
+  const getQuestionTypeLabel = (type: QuestionType) => {
+    const typeMap = {
+      [QuestionType.choice]: '选择题',
+      [QuestionType.qa]: '问答题',
+      [QuestionType.judge]: '判断题'
+    }
+    return typeMap[type] || type
   }
 
   return (
@@ -109,8 +103,8 @@ export function QuestionAdding({ goal, onQuestionsUpdated }: QuestionAddingProps
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900">{question.title}</h4>
                     <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant="outline" className="text-xs">{question.type}</Badge>
-                      <Badge variant="outline" className="text-xs">{question.difficulty}</Badge>
+                      <Badge variant="outline" className="text-xs">{getQuestionTypeLabel(question.type)}</Badge>
+                      <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                     </div>
                   </div>
                   <Button 
