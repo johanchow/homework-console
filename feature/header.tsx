@@ -28,12 +28,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/component/dropdown-menu'
-import { useAuth } from '@/lib/hooks/useAuth'
+import { useProfile } from '@/hook/useProfile'
 import { LoginRegisterModal } from '@/feature/LoginRegisterModal'
+import { logout } from '@/api/axios/user';
 
 export const Header = () => {
   const router = useRouter()
-  const { user, isAuthenticated, logout } = useAuth()
+  const { isAuthenticated, user } = useProfile()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -115,9 +116,9 @@ export const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} alt={user?.username} />
+                      <AvatarImage src={user?.avatar} alt={user?.name} />
                       <AvatarFallback>
-                        {user?.username?.charAt(0).toUpperCase()}
+                        {user?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                   </Button>
@@ -125,7 +126,7 @@ export const Header = () => {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{user?.username}</p>
+                      <p className="text-sm font-medium leading-none">{user?.name}</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {user?.email || user?.phone}
                       </p>
@@ -210,13 +211,13 @@ export const Header = () => {
                 <div className="border-t border-gray-200 pt-4">
                   <div className="flex items-center space-x-3 px-3 py-2">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.avatar} alt={user?.username} />
+                      <AvatarImage src={user?.avatar} alt={user?.name} />
                       <AvatarFallback>
-                        {user?.username?.charAt(0).toUpperCase()}
+                        {user?.name?.charAt(0).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{user?.username}</p>
+                      <p className="text-sm font-medium">{user?.name}</p>
                       <p className="text-xs text-gray-500">
                         {user?.email || user?.phone}
                       </p>

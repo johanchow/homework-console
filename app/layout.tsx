@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 import './global.css'
 import { Header } from '@/feature/Header'
-import { ReactQueryProvider } from '@/api/query-base/client-query-provider'
+import { ReactQueryProvider } from '@/api/query-base/client-query'
 import { createServerQueryClient } from '@/api/query-base/server-query'
 import { getUserProfile } from '@/api/fetch/user'
 
@@ -37,7 +37,7 @@ export default async function RootLayout({
           <ReactQueryProvider state={serverQuery.dehydratedState()}>
             <Header />
             <main className="flex-1">
-                {children}
+              {children}
             </main>
           </ReactQueryProvider>
         </div>
