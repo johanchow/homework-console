@@ -1,11 +1,11 @@
 export enum QuestionType {
-  choice = 'choice',
-  qa = 'qa',
-  judge = 'judge',
+  choice = "choice",
+  qa = "qa",
+  judge = "judge",
 }
 
 export type Question = {
-  id: string
+  id: string;
   subject: string;
   type: QuestionType;
   title: string;
@@ -17,6 +17,6 @@ export type Question = {
   creator_id: string;
   created_at: Date;
   updated_at: Date;
-}
+};
 
-export default Question
+export default Question;

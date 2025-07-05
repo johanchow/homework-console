@@ -21,21 +21,18 @@ const mockQuestions = [
     id: 1,
     title: '微积分基本定理的应用',
     type: '计算题',
-    difficulty: '中等',
     subject: '数学'
   },
   {
     id: 2,
     title: '导数的几何意义',
     type: '选择题',
-    difficulty: '简单',
     subject: '数学'
   },
   {
     id: 3,
     title: '定积分的计算方法',
     type: '计算题',
-    difficulty: '困难',
     subject: '数学'
   }
 ]
@@ -107,9 +104,9 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: Questio
                       <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                     </div>
                   </div>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     className="text-red-600 hover:text-red-700"
                     onClick={() => handleDeleteQuestion(question.id)}
                   >
@@ -127,9 +124,9 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: Questio
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <QuestionFromAI onQuestionSelected={handleAIQuestionSelected}>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="h-16 flex flex-col items-center justify-center space-y-2"
               >
                 <Bot className="w-6 h-6" />
@@ -137,9 +134,9 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: Questio
               </Button>
             </QuestionFromAI>
             <QuestionFromImport onQuestionSelected={handleImportQuestionSelected}>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="h-16 flex flex-col items-center justify-center space-y-2"
               >
                 <Upload className="w-6 h-6" />

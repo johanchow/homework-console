@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Bot, RefreshCw, Check } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -13,9 +14,8 @@ import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { Bot, RefreshCw, Check } from 'lucide-react'
 import { Question, QuestionType } from '@/entity/question'
-
+import { newUuid } from '@/util'
 interface QuestionFromAIProps {
   onQuestionSelected: (question: Question) => void
   children: React.ReactNode
@@ -30,14 +30,14 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return
-    
+
     setIsGenerating(true)
-    
+
     // 模拟AI生成题目
     setTimeout(() => {
       const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
       const newQuestions: Question[] = Array.from({ length: count }, (_, index) => ({
-        id: `ai-${Date.now()}-${index}`,
+        id: newUuid(),
         title: `AI生成的题目 ${index + 1}: ${prompt}`,
         type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
         subject: '数学',
@@ -45,7 +45,7 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
         created_at: new Date(),
         updated_at: new Date()
       }))
-      
+
       setGeneratedQuestions(newQuestions)
       setIsGenerating(false)
     }, 2000)
@@ -126,8 +126,8 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
 
           {/* 生成按钮 */}
           <div className="flex space-x-4">
-            <Button 
-              onClick={handleGenerate} 
+            <Button
+              onClick={handleGenerate}
               disabled={!prompt.trim() || isGenerating}
               className="flex-1"
             >
@@ -143,8 +143,8 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
                 </>
               )}
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={handleRegenerate}
               disabled={!prompt.trim() || isGenerating || generatedQuestions.length === 0}
             >
@@ -160,7 +160,7 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
                 <h3 className="text-lg font-semibold">生成的题目</h3>
                 <Badge variant="secondary">{generatedQuestions.length} 道题目</Badge>
               </div>
-              
+
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {generatedQuestions.map((question) => (
                   <div key={question.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -171,8 +171,8 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
                         <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                       </div>
                     </div>
-                    <Button 
-                      size="sm" 
+                    <Button
+                      size="sm"
                       onClick={() => handleSelectQuestion(question)}
                       className="ml-4"
                     >
