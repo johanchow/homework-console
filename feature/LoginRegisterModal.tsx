@@ -37,7 +37,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Eye, EyeOff, Mail, Phone, Lock, User, CheckCircle } from 'lucide-react'
-
+import { setCookie } from '@/util/cookie'
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import {
@@ -52,24 +52,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/component/form'
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/component/opt-input'
 import { Checkbox } from '@/component/checkbox'
-import { userAPI } from '@/lib/api/user'
+import { login, register, logout, sendVerificationCode } from '@/api/axios/user'
 
 // 账号密码登录表单验证
 const accountLoginSchema = z.object({
-  username: z.string().min(1, '请输入用户名'),
+  mode: z.literal('account'),
+  name: z.string().min(1, '请输入用户名'),
   password: z.string().min(6, '密码至少6位'),
 })
 
 // 手机号验证码登录表单验证
 const phoneLoginSchema = z.object({
+  mode: z.literal('phone'),
   phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入正确的手机号'),
-  code: z.string().length(6, '请输入6位验证码'),
+  verify_code: z.string().length(6, '请输入6位验证码'),
 })
 
 // 账号密码注册表单验证
 const accountRegisterSchema = z.object({
-  username: z.string().min(3, '用户名至少3位').max(20, '用户名最多20位'),
-  email: z.string().email('请输入正确的邮箱地址'),
+  mode: z.literal('account'),
+  name: z.string().min(3, '用户名至少3位').max(20, '用户名最多20位'),
   password: z.string().min(6, '密码至少6位').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, '密码必须包含大小写字母和数字'),
   confirmPassword: z.string(),
   agreeTerms: z.boolean().refine(val => val === true, '请同意用户协议和隐私政策'),
@@ -80,8 +82,9 @@ const accountRegisterSchema = z.object({
 
 // 手机号验证码注册表单验证
 const phoneRegisterSchema = z.object({
+  mode: z.literal('phone'),
   phone: z.string().regex(/^1[3-9]\d{9}$/, '请输入正确的手机号'),
-  code: z.string().length(6, '请输入6位验证码'),
+  verify_code: z.string().length(6, '请输入6位验证码'),
   agreeTerms: z.boolean().refine(val => val === true, '请同意用户协议和隐私政策'),
 })
 
@@ -108,7 +111,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const accountLoginForm = useForm<AccountLoginForm>({
     resolver: zodResolver(accountLoginSchema),
     defaultValues: {
-      username: '',
+      mode: 'account',
+      name: '',
       password: '',
     },
   })
@@ -117,8 +121,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const phoneLoginForm = useForm<PhoneLoginForm>({
     resolver: zodResolver(phoneLoginSchema),
     defaultValues: {
+      mode: 'phone',
       phone: '',
-      code: '',
+      verify_code: '',
     },
   })
 
@@ -126,8 +131,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const accountRegisterForm = useForm<AccountRegisterForm>({
     resolver: zodResolver(accountRegisterSchema),
     defaultValues: {
-      username: '',
-      email: '',
+      mode: 'account',
+      name: '',
       password: '',
       confirmPassword: '',
       agreeTerms: false,
@@ -138,8 +143,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const phoneRegisterForm = useForm<PhoneRegisterForm>({
     resolver: zodResolver(phoneRegisterSchema),
     defaultValues: {
+      mode: 'phone',
       phone: '',
-      code: '',
+      verify_code: '',
       agreeTerms: false,
     },
   })
@@ -149,9 +155,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await userAPI.loginWithAccount(data)
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      const respData = await login(data)
+      setCookie('token', respData.token)
       setOpen(false)
       onSuccess?.()
     } catch (error: any) {
@@ -167,9 +172,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await userAPI.loginWithPhone(data)
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
+      const response = await login(data)
+      setCookie('token', response.token)
       setOpen(false)
       onSuccess?.()
     } catch (error: any) {
@@ -185,9 +189,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await userAPI.registerWithAccount({
-        username: data.username,
-        email: data.email,
+      const response = await register({
+        mode: 'account',
+        name: data.name,
         password: data.password,
       })
       localStorage.setItem('token', response.token)
@@ -207,9 +211,10 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setIsLoading(true)
     setError('')
     try {
-      const response = await userAPI.registerWithPhone({
+      const response = await register({
+        mode: 'phone',
         phone: data.phone,
-        code: data.code,
+        verify_code: data.verify_code,
       })
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
@@ -232,7 +237,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     }
 
     try {
-      await userAPI.sendVerificationCode(phone)
+      await sendVerificationCode(phone)
       setCountdown(60)
       const timer = setInterval(() => {
         setCountdown((prev) => {
@@ -297,7 +302,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
                   <form onSubmit={accountLoginForm.handleSubmit(onAccountLogin)} className="space-y-4">
                     <FormField
                       control={accountLoginForm.control}
-                      name="username"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>用户名</FormLabel>
@@ -378,7 +383,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
 
                     <FormField
                       control={phoneLoginForm.control}
-                      name="code"
+                      name="verify_code"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>验证码</FormLabel>
@@ -431,7 +436,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
                   <form onSubmit={accountRegisterForm.handleSubmit(onAccountRegister)} className="space-y-4">
                     <FormField
                       control={accountRegisterForm.control}
-                      name="username"
+                      name="name"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>用户名</FormLabel>
@@ -441,28 +446,6 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
                               <Input
                                 {...field}
                                 placeholder="请输入用户名"
-                                className="pl-10"
-                              />
-                            </div>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={accountRegisterForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>邮箱</FormLabel>
-                          <FormControl>
-                            <div className="relative">
-                              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                              <Input
-                                {...field}
-                                type="email"
-                                placeholder="请输入邮箱地址"
                                 className="pl-10"
                               />
                             </div>
@@ -584,7 +567,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
 
                     <FormField
                       control={phoneRegisterForm.control}
-                      name="code"
+                      name="verify_code"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>验证码</FormLabel>
