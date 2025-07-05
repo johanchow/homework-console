@@ -1,7 +1,7 @@
 import request from './request'
 
 type PostLoginPayload = {
-  mode: 'account' | 'phone',
+  mode: 'name' | 'phone',
   name?: string,
   password?: string,
   phone?: string,
@@ -9,7 +9,7 @@ type PostLoginPayload = {
 };
 
 type PostRegisterPayload = {
-  mode: 'account' | 'phone',
+  mode: 'name' | 'phone',
   name?: string,
   password?: string,
   phone?: string,

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { userAPI } from '@/lib/api/user'
+import { logout } from '@/api/axios/user'
 
 export interface User {
   id: string
@@ -60,56 +60,10 @@ export function useAuth() {
     initializeAuth()
   }, [])
 
-  // 登录
-  const login = useCallback(async (loginData: any, type: 'account' | 'phone') => {
-    try {
-      const response = type === 'account'
-        ? await userAPI.loginWithAccount(loginData)
-        : await userAPI.loginWithPhone(loginData)
-
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-
-      setAuthState({
-        user: response.user,
-        token: response.token,
-        isLoading: false,
-        isAuthenticated: true,
-      })
-
-      return response
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
-  // 注册
-  const register = useCallback(async (registerData: any, type: 'account' | 'phone') => {
-    try {
-      const response = type === 'account'
-        ? await userAPI.registerWithAccount(registerData)
-        : await userAPI.registerWithPhone(registerData)
-
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('user', JSON.stringify(response.user))
-
-      setAuthState({
-        user: response.user,
-        token: response.token,
-        isLoading: false,
-        isAuthenticated: true,
-      })
-
-      return response
-    } catch (error) {
-      throw error
-    }
-  }, [])
-
   // 退出登录
-  const logout = useCallback(async () => {
+  const onLogout = useCallback(async () => {
     try {
-      await userAPI.logout()
+      await logout()
     } catch (error) {
       console.error('退出登录失败:', error)
     } finally {
@@ -136,9 +90,7 @@ export function useAuth() {
 
   return {
     ...authState,
-    login,
-    register,
-    logout,
+    onLogout,
     updateUser,
   }
 }

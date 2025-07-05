@@ -56,7 +56,7 @@ import { login, register, logout, sendVerificationCode } from '@/api/axios/user'
 
 // 账号密码登录表单验证
 const accountLoginSchema = z.object({
-  mode: z.literal('account'),
+  mode: z.literal('name'),
   name: z.string().min(1, '请输入用户名'),
   password: z.string().min(6, '密码至少6位'),
 })
@@ -70,7 +70,7 @@ const phoneLoginSchema = z.object({
 
 // 账号密码注册表单验证
 const accountRegisterSchema = z.object({
-  mode: z.literal('account'),
+  mode: z.literal('name'),
   name: z.string().min(3, '用户名至少3位').max(20, '用户名最多20位'),
   password: z.string().min(6, '密码至少6位').regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, '密码必须包含大小写字母和数字'),
   confirmPassword: z.string(),
@@ -111,7 +111,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const accountLoginForm = useForm<AccountLoginForm>({
     resolver: zodResolver(accountLoginSchema),
     defaultValues: {
-      mode: 'account',
+      mode: 'name',
       name: '',
       password: '',
     },
@@ -131,7 +131,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   const accountRegisterForm = useForm<AccountRegisterForm>({
     resolver: zodResolver(accountRegisterSchema),
     defaultValues: {
-      mode: 'account',
+      mode: 'name',
       name: '',
       password: '',
       confirmPassword: '',
@@ -156,7 +156,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setError('')
     try {
       const respData = await login(data)
-      setCookie('token', respData.token)
+      setCookie(process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME!, respData.token)
+      setCookie(process.env.NEXT_PUBLIC_USERID_COOKIE_NAME!, respData.user.id)
       setOpen(false)
       onSuccess?.()
     } catch (error: any) {
@@ -190,7 +191,7 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     setError('')
     try {
       const response = await register({
-        mode: 'account',
+        mode: 'name',
         name: data.name,
         password: data.password,
       })

@@ -18,12 +18,14 @@ export default async function RootLayout({
 }) {
   const serverQuery = createServerQueryClient()
   const cookieStore = await cookies()
-  const token = cookieStore.get('Authorization')?.value
-  if (token) {
+  const userId = cookieStore.get(process.env.NEXT_PUBLIC_USERID_COOKIE_NAME!)?.value
+  console.log('userId: ', userId)
+  if (userId) {
+    const token = cookieStore.get(process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME!)?.value
     await serverQuery.prefetch([
       {
-        queryKey: ['user', token],
-        queryFn: () => getUserProfile(),
+        queryKey: ['user', userId],
+        queryFn: () => getUserProfile(token || ''),
       },
     ])
   }

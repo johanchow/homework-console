@@ -3,7 +3,7 @@ import { getCookie, deleteCookie } from '@/util/cookie'
 
 // API 基础配置
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
+  baseURL: process.env.NEXT_PUBLIC_API_BASE_URL!,
   timeout: 10000,
 })
 
@@ -11,7 +11,7 @@ const api = axios.create({
 api.interceptors.request.use(
   (config) => {
     // 可以在这里添加 token 等认证信息
-    const token = getCookie('token')
+    const token = getCookie(process.env.NEXT_PUBLIC_COOKIE_NAME || 'token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
