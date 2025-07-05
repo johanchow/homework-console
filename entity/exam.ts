@@ -3,12 +3,12 @@ import { Question } from './question'
 import { Message } from './message'
 
 export type Answer = {
-  question: Record<string, Question>;
-  messages: Record<string, string | Message[]>;
-  answer: Record<string, string>;
+  question: {[id: string]: Question};
+  answer: {[id: string]: string};
+  messages: {[id: string]: Message[]};
 }
 
-enum ExamStatus {
+export enum ExamStatus {
   PENDING = 'pending',
   COMPLETED = 'completed',
   FAILED = 'failed',
@@ -23,7 +23,7 @@ export type Exam = {
   answer?: Answer;
   created_at: string;
   updated_at: string;
-  finished_at: string;
+  finished_at?: string;
 }
 
 export type ExamFull = Exam & {

@@ -14,6 +14,7 @@ import {
 } from '@/component/dropdown-menu'
 import { Search, Target, Calendar, BookOpen, Plus, MoreHorizontal, Trash2 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
 // 模拟数据
 const mockGoals = [
@@ -137,6 +138,7 @@ export default function GoalPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSubject, setSelectedSubject] = useState('全部')
   const [currentPage, setCurrentPage] = useState(1)
+  const router = useRouter()
   const itemsPerPage = 12
 
   // 过滤数据
@@ -242,7 +244,9 @@ export default function GoalPage() {
       {/* 目标卡片网格 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         {paginatedGoals.map((goal) => (
-          <Card key={goal.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+          <Card key={goal.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
+            router.push(`/goal/${goal.id}`)
+          }}>
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">
                 <div className="flex-1">

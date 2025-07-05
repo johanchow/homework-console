@@ -14,14 +14,7 @@ import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Bot, RefreshCw, Check } from 'lucide-react'
-
-interface Question {
-  id: number
-  title: string
-  type: string
-  difficulty: string
-  subject: string
-}
+import { Question, QuestionType } from '@/entity/question'
 
 interface QuestionFromAIProps {
   onQuestionSelected: (question: Question) => void
@@ -42,12 +35,15 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
     
     // 模拟AI生成题目
     setTimeout(() => {
+      const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
       const newQuestions: Question[] = Array.from({ length: count }, (_, index) => ({
-        id: Date.now() + index,
+        id: `ai-${Date.now()}-${index}`,
         title: `AI生成的题目 ${index + 1}: ${prompt}`,
-        type: ['选择题', '填空题', '计算题', '简答题'][Math.floor(Math.random() * 4)],
-        difficulty: ['简单', '中等', '困难'][Math.floor(Math.random() * 3)],
-        subject: '数学'
+        type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
+        subject: '数学',
+        creator_id: 'ai-system',
+        created_at: new Date(),
+        updated_at: new Date()
       }))
       
       setGeneratedQuestions(newQuestions)
@@ -73,6 +69,15 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
       setCount(5)
       setGeneratedQuestions([])
     }
+  }
+
+  const getQuestionTypeLabel = (type: QuestionType) => {
+    const typeMap = {
+      [QuestionType.choice]: '选择题',
+      [QuestionType.qa]: '问答题',
+      [QuestionType.judge]: '判断题'
+    }
+    return typeMap[type] || type
   }
 
   return (
@@ -162,8 +167,7 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
                     <div className="flex-1">
                       <h4 className="font-medium text-gray-900 mb-2">{question.title}</h4>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="outline" className="text-xs">{question.type}</Badge>
-                        <Badge variant="outline" className="text-xs">{question.difficulty}</Badge>
+                        <Badge variant="outline" className="text-xs">{getQuestionTypeLabel(question.type)}</Badge>
                         <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                       </div>
                     </div>

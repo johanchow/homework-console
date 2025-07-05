@@ -1,4 +1,4 @@
-enum QuestionType {
+export enum QuestionType {
   choice = 'choice',
   qa = 'qa',
   judge = 'judge',

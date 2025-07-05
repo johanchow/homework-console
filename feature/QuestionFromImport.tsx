@@ -13,14 +13,7 @@ import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, FileText, Image, Check, X } from 'lucide-react'
-
-interface Question {
-  id: number
-  title: string
-  type: string
-  difficulty: string
-  subject: string
-}
+import { Question, QuestionType } from '@/entity/question'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
@@ -50,12 +43,15 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
     setIsProcessing(true)
     
     setTimeout(() => {
+      const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
       const newQuestions: Question[] = uploadedImages.map((_, index) => ({
-        id: Date.now() + index,
+        id: `import-${Date.now()}-${index}`,
         title: `从图片 ${index + 1} 解析的题目`,
-        type: ['选择题', '填空题', '计算题', '简答题'][Math.floor(Math.random() * 4)],
-        difficulty: ['简单', '中等', '困难'][Math.floor(Math.random() * 3)],
-        subject: '数学'
+        type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
+        subject: '数学',
+        creator_id: 'import-system',
+        created_at: new Date(),
+        updated_at: new Date()
       }))
       
       setParsedQuestions(newQuestions)
@@ -70,12 +66,15 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
     
     setTimeout(() => {
       const lines = textContent.split('\n').filter(line => line.trim())
+      const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
       const newQuestions: Question[] = lines.slice(0, 5).map((line, index) => ({
-        id: Date.now() + index,
+        id: `text-${Date.now()}-${index}`,
         title: `从文字解析: ${line.substring(0, 50)}...`,
-        type: ['选择题', '填空题', '计算题', '简答题'][Math.floor(Math.random() * 4)],
-        difficulty: ['简单', '中等', '困难'][Math.floor(Math.random() * 3)],
-        subject: '数学'
+        type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
+        subject: '数学',
+        creator_id: 'import-system',
+        created_at: new Date(),
+        updated_at: new Date()
       }))
       
       setParsedQuestions(newQuestions)
@@ -96,6 +95,15 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
       setParsedQuestions([])
       setActiveTab('image')
     }
+  }
+
+  const getQuestionTypeLabel = (type: QuestionType) => {
+    const typeMap = {
+      [QuestionType.choice]: '选择题',
+      [QuestionType.qa]: '问答题',
+      [QuestionType.judge]: '判断题'
+    }
+    return typeMap[type] || type
   }
 
   return (
@@ -219,8 +227,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
                   <div className="flex-1">
                     <h4 className="font-medium text-gray-900 mb-2">{question.title}</h4>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="outline" className="text-xs">{question.type}</Badge>
-                      <Badge variant="outline" className="text-xs">{question.difficulty}</Badge>
+                      <Badge variant="outline" className="text-xs">{getQuestionTypeLabel(question.type)}</Badge>
                       <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                     </div>
                   </div>
@@ -241,12 +248,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
         {parsedQuestions.length === 0 && !isProcessing && (
           <div className="text-center py-8 text-gray-500">
             <Upload className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>
-              {activeTab === 'image' 
-                ? '请上传图片并点击解析按钮开始识别题目' 
-                : '请粘贴题目文字并点击解析按钮开始识别题目'
-              }
-            </p>
+            <p>请上传图片或粘贴文字内容开始智能导入</p>
           </div>
         )}
       </DialogContent>
