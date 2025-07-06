@@ -6,8 +6,9 @@ const request = async <T = any>(
 ): Promise<T> => {
   const cookieStore = await cookies();
   const token = cookieStore.get(
-    process.env.NEXT_PUBLIC_COOKIE_NAME_TOKEN!
+    process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME!
   )?.value;
+  console.log("getProfile token: ", token);
   const response = await fetch(url, {
     ...options,
     headers: {

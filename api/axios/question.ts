@@ -3,7 +3,7 @@ import { Question } from "@/entity/question";
 
 export const batchCreateQuestions = async (
   data: Question[]
-): Promise<Pick<Question, "id">[]> => {
+): Promise<{ questions: Pick<Question, "id">[] }> => {
   const response = await request.post(`/question/batch-create`, {
     questions: data,
   });

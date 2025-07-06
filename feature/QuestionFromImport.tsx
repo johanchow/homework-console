@@ -39,21 +39,21 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
 
   const handleProcessImages = async () => {
     if (uploadedImages.length === 0) return
-    
+
     setIsProcessing(true)
-    
+
     setTimeout(() => {
       const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
       const newQuestions: Question[] = uploadedImages.map((_, index) => ({
         id: `import-${Date.now()}-${index}`,
         title: `从图片 ${index + 1} 解析的题目`,
         type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
-        subject: '数学',
+        subject: 'math',
         creator_id: 'import-system',
         created_at: new Date(),
         updated_at: new Date()
       }))
-      
+
       setParsedQuestions(newQuestions)
       setIsProcessing(false)
     }, 2000)
@@ -61,9 +61,9 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
 
   const handleProcessText = async () => {
     if (!textContent.trim()) return
-    
+
     setIsProcessing(true)
-    
+
     setTimeout(() => {
       const lines = textContent.split('\n').filter(line => line.trim())
       const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
@@ -76,7 +76,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
         created_at: new Date(),
         updated_at: new Date()
       }))
-      
+
       setParsedQuestions(newQuestions)
       setIsProcessing(false)
     }, 1500)
@@ -179,7 +179,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
                       </div>
                     ))}
                   </div>
-                  <Button 
+                  <Button
                     onClick={handleProcessImages}
                     disabled={isProcessing}
                     className="w-full"
@@ -203,7 +203,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
                   className="mt-2 flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              <Button 
+              <Button
                 onClick={handleProcessText}
                 disabled={!textContent.trim() || isProcessing}
                 className="w-full"
@@ -220,7 +220,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
               <h3 className="text-lg font-semibold">解析结果</h3>
               <Badge variant="secondary">{parsedQuestions.length} 道题目</Badge>
             </div>
-            
+
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {parsedQuestions.map((question) => (
                 <div key={question.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
@@ -231,8 +231,8 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
                       <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                     </div>
                   </div>
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     onClick={() => handleSelectQuestion(question)}
                     className="ml-4"
                   >

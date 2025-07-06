@@ -40,7 +40,7 @@ export function QuestionFromAI({ onQuestionSelected, children }: QuestionFromAIP
         id: newUuid(),
         title: `AI生成的题目 ${index + 1}: ${prompt}`,
         type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
-        subject: '数学',
+        subject: 'math',
         creator_id: 'ai-system',
         created_at: new Date(),
         updated_at: new Date()

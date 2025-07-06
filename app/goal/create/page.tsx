@@ -62,7 +62,7 @@ export default function CreateGoalPage() {
     // 1. 先创建目标
     const newGoal = {
       name: formData.name,
-      subject: formData.subject,
+      subject: formData.subject || 'math',
       creator_id: user?.id,
     }
     const goal = await createGoal(newGoal)
@@ -71,7 +71,7 @@ export default function CreateGoalPage() {
       ...question,
       creator_id: user?.id,
     }))
-    const questions = await batchCreateQuestions(newQuestions)
+    const { questions } = await batchCreateQuestions(newQuestions)
     // 3. 再创建考试
     const newExam = {
       goal_id: goal.id,
