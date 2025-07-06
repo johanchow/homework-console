@@ -11,7 +11,7 @@ export const useProfile = () => {
   let currentUser: User | undefined;
   console.log("cookieUserId: ", cookieUserId);
   if (cookieUserId) {
-    currentUser = queryClient.getQueryData<{ user: User }>(["user", cookieUserId])?.user;
+    currentUser = queryClient.getQueryData<User>(["user", cookieUserId]);
     console.log("currentUser: ", currentUser);
   }
 

@@ -8,18 +8,10 @@ import { Label } from '@/component/label'
 import { ArrowLeft, ArrowRight, Users } from 'lucide-react'
 import Link from 'next/link'
 import { QuestionAdding } from '@/feature/QuestionAdding'
-
-interface Question {
-  id: number
-  title: string
-  type: string
-  difficulty: string
-  subject: string
-}
-
-interface Goal {
-  id?: number
-  name: string
+import { useUserStore } from '@/store/useUserStore'
+import { Exam, Goal, Question, ExamStatus } from '@/entity'
+import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
+interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject'> {
   questions: Question[]
   assignees: any[]
   startDate: string
@@ -28,8 +20,10 @@ interface Goal {
 
 export default function CreateGoalPage() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState<Goal>({
+  const { user } = useUserStore();
+  const [formData, setFormData] = useState<GoalCreateFormData>({
     name: '',
+    subject: '',
     questions: [],
     assignees: [],
     startDate: '',
@@ -62,9 +56,31 @@ export default function CreateGoalPage() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // TODO: 实现创建逻辑
     console.log('创建目标:', formData)
+    // 1. 先创建目标
+    const newGoal = {
+      name: formData.name,
+      subject: formData.subject || 'math',
+      creator_id: user?.id,
+    }
+    const goal = await createGoal(newGoal)
+    // 2. 再批量创建题目
+    const newQuestions = formData.questions.map(question => ({
+      ...question,
+      creator_id: user?.id,
+    }))
+    const { questions } = await batchCreateQuestions(newQuestions)
+    // 3. 再创建考试
+    const newExam = {
+      goal_id: goal.id,
+      question_id_list: questions.map(question => question.id),
+      examinee_id: user?.id,
+      status: ExamStatus.PREPARING,
+    }
+    const exam = await createExam(newExam)
+    alert('创建成功');
   }
 
   const renderStep1 = () => (
@@ -92,10 +108,10 @@ export default function CreateGoalPage() {
               className="text-lg"
             />
           </div>
-          
+
           <div className="pt-4">
-            <Button 
-              onClick={handleNext} 
+            <Button
+              onClick={handleNext}
               disabled={!formData.name.trim()}
               className="w-full"
             >
@@ -111,8 +127,8 @@ export default function CreateGoalPage() {
   const renderStep2 = () => (
     <div className="space-y-6">
       {/* 使用QuestionAdding组件 */}
-      <QuestionAdding 
-        goal={formData} 
+      <QuestionAdding
+        currentQuestions={[]}
         onQuestionsUpdated={handleQuestionsUpdated}
       />
 
@@ -220,17 +236,15 @@ export default function CreateGoalPage() {
         <div className="flex items-center justify-center space-x-4">
           {[1, 2, 3].map((step) => (
             <div key={step} className="flex items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                step <= currentStep 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-200 text-gray-500'
-              }`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${step <= currentStep
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-200 text-gray-500'
+                }`}>
                 {step}
               </div>
               {step < 3 && (
-                <div className={`w-16 h-0.5 mx-2 ${
-                  step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
-                }`} />
+                <div className={`w-16 h-0.5 mx-2 ${step < currentStep ? 'bg-blue-600' : 'bg-gray-200'
+                  }`} />
               )}
             </div>
           ))}
