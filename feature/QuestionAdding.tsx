@@ -13,6 +13,8 @@ import { QuestionType } from '@/entity/question'
 interface QuestionAddingProps {
   currentQuestions: Question[];
   onQuestionsUpdated: (questions: Question[]) => void
+  prompt?: string;
+  onPromptUpdated?: (prompt: string) => void;
 }
 
 // 模拟题目数据

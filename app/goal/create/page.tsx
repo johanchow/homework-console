@@ -11,7 +11,7 @@ import { QuestionAdding } from '@/feature/QuestionAdding'
 import { useUserStore } from '@/store/useUserStore'
 import { Exam, Goal, Question, ExamStatus } from '@/entity'
 import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
-interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject'> {
+interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject' | 'ai_prompt'> {
   questions: Question[]
   assignees: any[]
   startDate: string
@@ -24,6 +24,7 @@ export default function CreateGoalPage() {
   const [formData, setFormData] = useState<GoalCreateFormData>({
     name: '',
     subject: '',
+    ai_prompt: '',
     questions: [],
     assignees: [],
     startDate: '',
@@ -128,7 +129,8 @@ export default function CreateGoalPage() {
     <div className="space-y-6">
       {/* 使用QuestionAdding组件 */}
       <QuestionAdding
-        currentQuestions={[]}
+        onPromptUpdated={(prompt) => handleInputChange('ai_prompt', prompt)}
+        currentQuestions={formData.questions}
         onQuestionsUpdated={handleQuestionsUpdated}
       />
 
