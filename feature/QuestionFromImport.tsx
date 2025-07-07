@@ -12,25 +12,92 @@ import {
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
-import { Upload, FileText, Image, Check, X } from 'lucide-react'
+import { Upload, FileText, Image, Check, X, Loader2 } from 'lucide-react'
 import { Question, QuestionType } from '@/entity/question'
+import { uploadFile } from '@/api/axios/cos'
+import { parseQuestionFromImages } from '@/api/axios/question'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
   children: React.ReactNode
 }
 
+interface UploadedImage {
+  file: File
+  preview: string
+  url?: string
+  isUploading: boolean
+  uploadSuccess: boolean
+  uploadError?: string
+}
+
 export function QuestionFromImport({ onQuestionSelected, children }: QuestionFromImportProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [activeTab, setActiveTab] = useState('image')
-  const [uploadedImages, setUploadedImages] = useState<File[]>([])
+  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
   const [textContent, setTextContent] = useState('')
   const [isProcessing, setIsProcessing] = useState(false)
   const [parsedQuestions, setParsedQuestions] = useState<Question[]>([])
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
-    setUploadedImages(prev => [...prev, ...files])
+
+    files.forEach(async (file) => {
+      if (file.type.startsWith('image/')) {
+        // 生成预览
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const preview = e.target?.result as string
+
+          // 添加到列表，标记为上传中
+          const newImage: UploadedImage = {
+            file,
+            preview,
+            isUploading: true,
+            uploadSuccess: false
+          }
+
+          setUploadedImages(prev => {
+            const newList = [...prev, newImage]
+            // 立即开始上传
+            handleUploadSingleImage(newImage, newList.length - 1)
+            return newList
+          })
+        }
+        reader.readAsDataURL(file)
+      }
+    })
+  }
+
+  const handleUploadSingleImage = async (image: UploadedImage, index: number) => {
+    try {
+      const result = await uploadFile(image.file)
+
+      setUploadedImages(prev => prev.map((img, i) => {
+        if (i === index) {
+          return {
+            ...img,
+            isUploading: false,
+            uploadSuccess: result.success,
+            url: result.success ? result.url : undefined,
+            uploadError: result.success ? undefined : '上传失败'
+          }
+        }
+        return img
+      }))
+    } catch (error) {
+      setUploadedImages(prev => prev.map((img, i) => {
+        if (i === index) {
+          return {
+            ...img,
+            isUploading: false,
+            uploadSuccess: false,
+            uploadError: '上传失败'
+          }
+        }
+        return img
+      }))
+    }
   }
 
   const handleRemoveImage = (index: number) => {
@@ -38,25 +105,37 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
   }
 
   const handleProcessImages = async () => {
-    if (uploadedImages.length === 0) return
+    const successImages = uploadedImages.filter(img => img.uploadSuccess && img.url)
+
+    if (successImages.length === 0) {
+      console.error('没有成功上传的图片')
+      return
+    }
 
     setIsProcessing(true)
 
-    setTimeout(() => {
-      const questionTypes = [QuestionType.choice, QuestionType.qa, QuestionType.judge]
-      const newQuestions: Question[] = uploadedImages.map((_, index) => ({
-        id: `import-${Date.now()}-${index}`,
-        title: `从图片 ${index + 1} 解析的题目`,
-        type: questionTypes[Math.floor(Math.random() * questionTypes.length)],
-        subject: 'math',
-        creator_id: 'import-system',
-        created_at: new Date(),
-        updated_at: new Date()
+    try {
+      // 调用API解析图片
+      const imageUrls = successImages.map(img => img.url!)
+
+      const parseResult = await parseQuestionFromImages({
+        image_urls: imageUrls
+      })
+
+      // 为解析的题目添加id字段
+      const questionsWithId = parseResult.questions.map((question, index) => ({
+        ...question,
+        id: `parsed-${Date.now()}-${index}`
       }))
 
-      setParsedQuestions(newQuestions)
+      setParsedQuestions(questionsWithId)
       setIsProcessing(false)
-    }, 2000)
+
+    } catch (error) {
+      console.error('解析图片失败:', error)
+      setIsProcessing(false)
+      // TODO: 显示错误提示
+    }
   }
 
   const handleProcessText = async () => {
@@ -105,6 +184,8 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
     }
     return typeMap[type] || type
   }
+
+  const successCount = uploadedImages.filter(img => img.uploadSuccess && img.url).length
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -160,31 +241,56 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
 
               {uploadedImages.length > 0 && (
                 <div className="space-y-3">
-                  <h4 className="font-medium">已上传图片 ({uploadedImages.length})</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {uploadedImages.map((file, index) => (
-                      <div key={index} className="relative border rounded-lg p-2">
-                        <div className="aspect-square bg-gray-100 rounded flex items-center justify-center">
-                          <Image className="w-8 h-8 text-gray-400" />
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium">已上传图片 ({uploadedImages.length})</h4>
+                    <Badge variant={successCount > 0 ? "default" : "secondary"}>
+                      成功: {successCount}
+                    </Badge>
+                  </div>
+                  <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
+                    {uploadedImages.map((image, index) => (
+                      <div key={index} className="relative border rounded-lg p-1">
+                        <div className="aspect-square bg-gray-100 rounded overflow-hidden relative">
+                          <img
+                            src={image.preview}
+                            alt={`图片 ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          {/* 上传状态覆盖层 - 只在非成功状态显示 */}
+                          {!image.uploadSuccess && (
+                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                              {image.isUploading ? (
+                                <Loader2 className="w-6 h-6 text-white animate-spin" />
+                              ) : (
+                                <X className="w-6 h-6 text-red-400" />
+                              )}
+                            </div>
+                          )}
+                          {/* 成功状态指示 - 在右上角显示绿色勾号 */}
+                          {image.uploadSuccess && (
+                            <div className="absolute top-1 right-1 bg-green-500 rounded-full p-1">
+                              <Check className="w-3 h-3 text-white" />
+                            </div>
+                          )}
                         </div>
-                        <p className="text-xs mt-1 truncate">{file.name}</p>
+                        <p className="text-xs mt-1 truncate text-center">{image.file.name}</p>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-white border rounded-full shadow-sm hover:bg-red-50"
                           onClick={() => handleRemoveImage(index)}
                         >
-                          <X className="w-3 h-3" />
+                          <X className="w-3 h-3 text-red-500" />
                         </Button>
                       </div>
                     ))}
                   </div>
                   <Button
                     onClick={handleProcessImages}
-                    disabled={isProcessing}
+                    disabled={isProcessing || successCount === 0}
                     className="w-full"
                   >
-                    {isProcessing ? '解析中...' : '开始解析图片'}
+                    {isProcessing ? '解析中...' : `开始解析图片 (${successCount} 张)`}
                   </Button>
                 </div>
               )}
@@ -221,7 +327,7 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
               <Badge variant="secondary">{parsedQuestions.length} 道题目</Badge>
             </div>
 
-            <div className="space-y-3 max-h-96 overflow-y-auto">
+            <div className="space-y-3 max-h-80 overflow-y-auto overscroll-contain">
               {parsedQuestions.map((question) => (
                 <div key={question.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
                   <div className="flex-1">
@@ -242,13 +348,6 @@ export function QuestionFromImport({ onQuestionSelected, children }: QuestionFro
                 </div>
               ))}
             </div>
-          </div>
-        )}
-
-        {parsedQuestions.length === 0 && !isProcessing && (
-          <div className="text-center py-8 text-gray-500">
-            <Upload className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>请上传图片或粘贴文字内容开始智能导入</p>
           </div>
         )}
       </DialogContent>
