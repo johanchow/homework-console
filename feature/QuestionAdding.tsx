@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, Trash2, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
 import { QuestionFromImport } from './QuestionFromImport'
@@ -17,29 +18,7 @@ interface QuestionAddingProps {
   onPromptUpdated?: (prompt: string) => void;
 }
 
-// 模拟题目数据
-const mockQuestions = [
-  {
-    id: 1,
-    title: '微积分基本定理的应用',
-    type: '计算题',
-    subject: '数学'
-  },
-  {
-    id: 2,
-    title: '导数的几何意义',
-    type: '选择题',
-    subject: '数学'
-  },
-  {
-    id: 3,
-    title: '定积分的计算方法',
-    type: '计算题',
-    subject: '数学'
-  }
-]
-
-export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: QuestionAddingProps) {
+export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, onPromptUpdated }: QuestionAddingProps) {
   const [questions, setQuestions] = useState<Question[]>(currentQuestions)
 
   const handleAIQuestionSelected = (question: Question) => {
@@ -121,31 +100,41 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated }: Questio
         </CardContent>
       </Card>
 
-      {/* 添加题目按钮 */}
+      {/* 添加题目 - Tab形式 */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <QuestionFromAI onQuestionSelected={handleAIQuestionSelected}>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-16 flex flex-col items-center justify-center space-y-2"
-              >
-                <Bot className="w-6 h-6" />
-                <span>AI出题</span>
-              </Button>
-            </QuestionFromAI>
-            <QuestionFromImport onQuestionSelected={handleImportQuestionSelected}>
-              <Button
-                variant="outline"
-                size="lg"
-                className="h-16 flex flex-col items-center justify-center space-y-2"
-              >
-                <Upload className="w-6 h-6" />
-                <span>智能录入</span>
-              </Button>
-            </QuestionFromImport>
-          </div>
+        <CardHeader>
+          <CardTitle>添加题目</CardTitle>
+          <CardDescription>
+            通过AI生成或导入方式添加新题目
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="ai" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="ai" className="flex items-center">
+                <Bot className="w-4 h-4 mr-2" />
+                AI出题
+              </TabsTrigger>
+              <TabsTrigger value="import" className="flex items-center">
+                <Upload className="w-4 h-4 mr-2" />
+                智能录入
+              </TabsTrigger>
+            </TabsList>
+
+            {/* AI出题Tab */}
+            <TabsContent value="ai" className="space-y-6">
+              <QuestionFromAI
+                onQuestionSelected={handleAIQuestionSelected}
+                prompt={prompt}
+                onPromptUpdated={onPromptUpdated}
+              />
+            </TabsContent>
+
+            {/* 智能录入Tab */}
+            <TabsContent value="import" className="space-y-6">
+              <QuestionFromImport onQuestionSelected={handleImportQuestionSelected} />
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
