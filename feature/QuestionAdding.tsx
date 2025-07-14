@@ -111,13 +111,13 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
         <CardContent>
           <Tabs defaultValue="ai" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="ai" className="flex items-center">
-                <Bot className="w-4 h-4 mr-2" />
-                AI出题
-              </TabsTrigger>
               <TabsTrigger value="import" className="flex items-center">
                 <Upload className="w-4 h-4 mr-2" />
                 智能录入
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center">
+                <Bot className="w-4 h-4 mr-2" />
+                AI出题
               </TabsTrigger>
             </TabsList>
 

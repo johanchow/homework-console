@@ -7,6 +7,8 @@ import { Upload, Check, X, Loader2, Edit, Trash2 } from 'lucide-react'
 import { Question, QuestionType } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
 import { parseQuestionFromImages } from '@/api/axios/question'
+import { Input } from '@/component/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { QuestionShow } from './QuestionShow'
 
 interface QuestionFromImportProps {
@@ -164,13 +166,28 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         <h3 className="text-lg font-semibold">智能导入题目</h3>
       </div>
 
+      <div className='flex items-center space-x-2'>
+        <Input placeholder='请输入题目' className='w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50' />
+        <Select>
+          <SelectContent>
+            <SelectItem value='choice'>选择题</SelectItem>
+            <SelectItem value='qa'>问答题</SelectItem>
+            <SelectItem value='judge'>判断题</SelectItem>
+            <SelectItem value='reading'>阅读题</SelectItem>
+            <SelectItem value='summary'>总结题</SelectItem>
+            <SelectItem value='show'>展示题</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-4">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 cursor-pointer">
           <div className="text-center">
-            <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-sm text-gray-600 mb-4">
-              支持 JPG、PNG、PDF 格式，可上传多张图片
-            </p>
+            <label htmlFor="image-upload">
+              <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-sm text-gray-600 mb-4">
+                支持 JPG、PNG、PDF 格式，可上传多个文件
+              </p>
+            </label>
             <input
               type="file"
               multiple
@@ -179,11 +196,6 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
               className="hidden"
               id="image-upload"
             />
-            <label htmlFor="image-upload">
-              <Button variant="outline" asChild>
-                <span>选择图片</span>
-              </Button>
-            </label>
           </div>
         </div>
 

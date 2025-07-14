@@ -2,6 +2,9 @@ export enum QuestionType {
   choice = "choice",
   qa = "qa",
   judge = "judge",
+  reading = "reading",
+  summary = "summary",
+  show = "show",
 }
 
 export type Question = {
