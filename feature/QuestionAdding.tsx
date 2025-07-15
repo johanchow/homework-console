@@ -109,7 +109,7 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="ai" className="w-full">
+          <Tabs defaultValue="import" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="import" className="flex items-center">
                 <Upload className="w-4 h-4 mr-2" />
