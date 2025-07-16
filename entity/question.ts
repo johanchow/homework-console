@@ -16,6 +16,7 @@ export type Question = {
   images?: string[];
   videos?: string[];
   audios?: string[];
+  attachments?: string[];
   answer?: string;
   creator_id: string;
   created_at: Date;
