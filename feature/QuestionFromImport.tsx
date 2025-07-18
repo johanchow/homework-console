@@ -6,12 +6,13 @@ import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
 import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
-import { Question, QuestionType } from '@/entity/question'
+import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
 import { Input } from '@/component/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { QuestionShow } from './QuestionShow'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/component/dialog'
+import { UrlLink } from '@/component/url-link'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
@@ -35,6 +36,7 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [showPreviewDialog, setShowPreviewDialog] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState<Partial<Question> | null>(null)
+  const [links, setLinks] = useState<string[]>([''])
 
   const {
     register,
@@ -166,6 +168,8 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
       audios: files.filter(f => f.file.type.startsWith('audio/')).map(f => f.url!),
       // 视频
       videos: files.filter(f => f.file.type.startsWith('video/')).map(f => f.url!),
+      // 网络链接
+      links: links.filter(link => link.trim()),
       title: formData.title,
       type: formData.type
     }))
@@ -184,25 +188,15 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         videos: currentQuestion.videos || [],
         audios: currentQuestion.audios || [],
         attachments: currentQuestion.attachments || [],
+        links: currentQuestion.links || [],
         answer: currentQuestion.answer || '',
         creator_id: currentQuestion.creator_id || '',
         created_at: currentQuestion.created_at || new Date(),
         updated_at: currentQuestion.updated_at || new Date()
       }
       onQuestionSelected(completeQuestion)
+      setShowPreviewDialog(false)
     }
-  }
-
-  const getQuestionTypeLabel = (type: QuestionType) => {
-    const typeMap: Record<QuestionType, string> = {
-      [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
-      [QuestionType.judge]: '判断题',
-      [QuestionType.reading]: '阅读题',
-      [QuestionType.summary]: '总结题',
-      [QuestionType.show]: '展示题'
-    }
-    return typeMap[type] || type
   }
 
   const getFileIcon = (file: File) => {
@@ -247,12 +241,9 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
               <SelectValue placeholder="选择题目类型" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={QuestionType.choice}>选择题</SelectItem>
-              <SelectItem value={QuestionType.qa}>问答题</SelectItem>
-              <SelectItem value={QuestionType.judge}>判断题</SelectItem>
-              <SelectItem value={QuestionType.reading}>阅读题</SelectItem>
-              <SelectItem value={QuestionType.summary}>总结题</SelectItem>
-              <SelectItem value={QuestionType.show}>展示题</SelectItem>
+              {Object.values(QuestionType).map((type) => (
+                <SelectItem key={type} value={type}>{questionTypeLabel[type]}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
           {errors.type && (
@@ -260,6 +251,15 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
           )}
         </div>
       </form>
+
+      {/* 网络链接url */}
+      <UrlLink
+        value={links}
+        onChange={setLinks}
+        label="网络链接"
+        placeholder="请输入URL链接"
+        maxUrls={5}
+      />
 
       <div className="space-y-4">
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 cursor-pointer">

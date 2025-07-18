@@ -301,6 +301,27 @@ export function QuestionShow({ question, enableChange = false, onChange }: Quest
           className="w-full"
         />
       )}
+
+      {/* 网络链接 */}
+      {editingQuestion.links && editingQuestion.links.length > 0 && (
+        <div className="space-y-2">
+          <div className="space-y-2">
+            {editingQuestion.links.map((link, index) => (
+              <div key={index} className="flex items-center space-x-2 p-2 border rounded-lg">
+                <a
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 text-sm flex-1 truncate"
+                >
+                  {link}
+                </a>
+                <span className="text-xs text-gray-500">外部链接</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -107,15 +107,6 @@ export function QuestionFromAI({ onQuestionSelected, prompt: outPrompt, onPrompt
     }
   }
 
-  const getQuestionTypeLabel = (type: QuestionType) => {
-    const typeMap = {
-      [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
-      [QuestionType.judge]: '判断题'
-    }
-    return typeMap[type] || type
-  }
-
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('zh-CN', {
       hour: '2-digit',

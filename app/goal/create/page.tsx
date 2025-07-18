@@ -11,11 +11,13 @@ import { QuestionAdding } from '@/feature/QuestionAdding'
 import { useUserStore } from '@/store/useUserStore'
 import { Exam, Goal, Question, ExamStatus } from '@/entity'
 import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
+import { Duration } from '@/component/duration'
+
 interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject' | 'ai_prompt'> {
   questions: Question[]
-  assignees: any[]
-  startDate: string
-  endDate: string
+  assignees: string[]
+  start_time?: string
+  duration?: { hours: number; minutes: number }
 }
 
 export default function CreateGoalPage() {
@@ -27,14 +29,21 @@ export default function CreateGoalPage() {
     ai_prompt: '',
     questions: [],
     assignees: [],
-    startDate: '',
-    endDate: ''
+    start_time: '',
+    duration: { hours: 0, minutes: 0 }
   })
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
       [field]: value
+    }))
+  }
+
+  const handleDurationChange = (duration: { hours: number; minutes: number }) => {
+    setFormData(prev => ({
+      ...prev,
+      duration
     }))
   }
 
@@ -184,25 +193,22 @@ export default function CreateGoalPage() {
             </div>
           </div>
 
-          {/* 开始时间 */}
-          <div className="space-y-2">
-            <Label htmlFor="startDate">开始时间（可选）</Label>
-            <Input
-              id="startDate"
-              type="date"
-              value={formData.startDate}
-              onChange={(e) => handleInputChange('startDate', e.target.value)}
-            />
-          </div>
+          {/* 开始时间和预计用时 */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_time">开始时间（可选）</Label>
+              <Input
+                id="start_time"
+                type="date"
+                value={formData.start_time}
+                onChange={(e) => handleInputChange('start_time', e.target.value)}
+              />
+            </div>
 
-          {/* 完成时间 */}
-          <div className="space-y-2">
-            <Label htmlFor="endDate">完成时间（可选）</Label>
-            <Input
-              id="endDate"
-              type="date"
-              value={formData.endDate}
-              onChange={(e) => handleInputChange('endDate', e.target.value)}
+            <Duration
+              value={formData.duration}
+              onChange={handleDurationChange}
+              label="预计用时（可选）"
             />
           </div>
 
