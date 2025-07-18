@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/component/button'
-import { Badge } from '@/component/badge'
 import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
 import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
@@ -344,7 +343,6 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
               <div className="border rounded-lg p-2 bg-gray-50 min-h-[200px]">
                 <QuestionShow
                   question={currentQuestion as Question}
-                  enableChange={false}
                   onChange={() => { }}
                 />
               </div>

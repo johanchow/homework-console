@@ -13,7 +13,7 @@ export const questionTypeLabel = {
   [QuestionType.judge]: "判断题",
   [QuestionType.reading]: "阅读题",
   [QuestionType.summary]: "总结题",
-  [QuestionType.show]: "展示题",
+  [QuestionType.show]: "表演题",
 };
 
 export type Question = {
@@ -26,6 +26,8 @@ export type Question = {
   videos?: string[];
   audios?: string[];
   attachments?: string[];
+  /* AI提取后的文件内容 */
+  file_contents?: Record<string, string>;
   links?: string[];
   answer?: string;
   creator_id: string;
