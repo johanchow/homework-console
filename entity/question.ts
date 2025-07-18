@@ -16,11 +16,22 @@ export const questionTypeLabel = {
   [QuestionType.show]: "表演题",
 };
 
+export const questionTypeIcon = {
+  [QuestionType.choice]: "🔍",
+  [QuestionType.qa]: "💬",
+  [QuestionType.judge]: "🔄",
+  [QuestionType.reading]: "📖",
+  [QuestionType.summary]: "📝",
+  [QuestionType.show]: "🎭",
+};
+
 export type Question = {
   id: string;
   subject: string;
   type: QuestionType;
   title: string;
+  /* 提示或者要求 */
+  tip: string;
   options?: string[];
   images?: string[];
   videos?: string[];

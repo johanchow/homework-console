@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
-import { Input } from '@/component/input'
 import { X, Image as ImageIcon, Video, Volume2, Play, Pause, FileText, Link as LinkIcon } from 'lucide-react'
-import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
+import { Question, QuestionType, questionTypeLabel, questionTypeIcon } from '@/entity/question'
+import { analyzeQuestionAnswer } from '@/api/axios/question'
 
 interface QuestionShowProps {
   question: Question
@@ -16,6 +16,15 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
   const [editingQuestion, setEditingQuestion] = useState<Question>(question)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
+
+  useEffect(() => {
+    analyzeQuestionAnswer(question).then((res) => {
+      setEditingQuestion({
+        ...question,
+        answer: res.answer
+      })
+    })
+  }, [question])
 
   const handleAnswerChange = (answer: string) => {
     const updatedQuestion = {
@@ -43,30 +52,11 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
     }
   }
 
-  const getQuestionTypeIcon = (type: QuestionType) => {
-    switch (type) {
-      case QuestionType.choice:
-        return <span className="text-lg">📝</span>
-      case QuestionType.qa:
-        return <span className="text-lg">❓</span>
-      case QuestionType.judge:
-        return <span className="text-lg">✅</span>
-      case QuestionType.reading:
-        return <span className="text-lg">📖</span>
-      case QuestionType.summary:
-        return <span className="text-lg">📝</span>
-      case QuestionType.show:
-        return <span className="text-lg">🎭</span>
-      default:
-        return <span className="text-lg">📝</span>
-    }
-  }
-
   return (
     <div className="w-full space-y-4">
       {/* 第一行：题目类型 + icon */}
       <div className="flex items-center space-x-2">
-        {getQuestionTypeIcon(editingQuestion.type)}
+        <span className="text-lg">{questionTypeIcon[editingQuestion.type]}</span>
         <Badge variant="outline">{questionTypeLabel[editingQuestion.type]}</Badge>
         {editingQuestion.subject && (
           <Badge variant="secondary">{editingQuestion.subject}</Badge>
