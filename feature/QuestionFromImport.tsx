@@ -29,6 +29,7 @@ interface UploadedFile {
 interface FormData {
   title: string
   type: QuestionType
+  tip: string
 }
 
 export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportProps) {
@@ -46,7 +47,8 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   } = useForm<FormData>({
     defaultValues: {
       title: '',
-      type: QuestionType.choice
+      type: QuestionType.choice,
+      tip: ''
     }
   })
 
@@ -170,7 +172,8 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
       // 网络链接
       links: links.filter(link => link.trim()),
       title: formData.title,
-      type: formData.type
+      type: formData.type,
+      tip: formData.tip
     }))
     setShowPreviewDialog(true)
   })
@@ -182,13 +185,14 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         title: currentQuestion.title,
         type: currentQuestion.type,
         subject: currentQuestion.subject || '',
+        tip: currentQuestion.tip || '',
         options: currentQuestion.options || [],
         images: currentQuestion.images || [],
         videos: currentQuestion.videos || [],
         audios: currentQuestion.audios || [],
         attachments: currentQuestion.attachments || [],
         links: currentQuestion.links || [],
-        answer: currentQuestion.answer || '',
+        material: currentQuestion.material || '',
         creator_id: currentQuestion.creator_id || '',
         created_at: currentQuestion.created_at || new Date(),
         updated_at: currentQuestion.updated_at || new Date()
@@ -219,35 +223,45 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         <h3 className="text-lg font-semibold">智能导入题目</h3>
       </div>
 
-      <form className='flex items-center space-x-4'>
+      <form className='space-y-4'>
+        <div className='flex items-center space-x-4'>
+          <div className="flex-1">
+            <Input
+              placeholder='请输入题目名称'
+              {...register('title', { required: '题目名称是必填项' })}
+              className={`rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.title ? 'border-red-500' : ''
+                }`}
+            />
+            {errors.title && (
+              <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
+            )}
+          </div>
+          <div className="w-48">
+            <Select
+              value={watchedType}
+              onValueChange={(value) => setValue('type', value as QuestionType)}
+            >
+              <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
+                <SelectValue placeholder="选择题目类型" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(QuestionType).map((type) => (
+                  <SelectItem key={type} value={type}>{questionTypeLabel[type]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.type && (
+              <p className="text-red-500 text-xs mt-1">{errors.type.message}</p>
+            )}
+          </div>
+        </div>
+
         <div className="flex-1">
           <Input
-            placeholder='请输入题目名称'
-            {...register('title', { required: '题目名称是必填项' })}
-            className={`rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.title ? 'border-red-500' : ''
-              }`}
+            placeholder='请输入题目提示或要求（可选）'
+            {...register('tip')}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
           />
-          {errors.title && (
-            <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
-          )}
-        </div>
-        <div className="w-48">
-          <Select
-            value={watchedType}
-            onValueChange={(value) => setValue('type', value as QuestionType)}
-          >
-            <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
-              <SelectValue placeholder="选择题目类型" />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.values(QuestionType).map((type) => (
-                <SelectItem key={type} value={type}>{questionTypeLabel[type]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {errors.type && (
-            <p className="text-red-500 text-xs mt-1">{errors.type.message}</p>
-          )}
         </div>
       </form>
 

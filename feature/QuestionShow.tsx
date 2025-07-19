@@ -18,10 +18,10 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
 
   useEffect(() => {
-    analyzeQuestionAnswer(question).then((res) => {
+    analyzeQuestionAnswer(question).then((newQuestion) => {
       setEditingQuestion({
         ...question,
-        answer: res.answer
+        ...newQuestion,
       })
     })
   }, [question])
@@ -67,6 +67,14 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
       <div className="text-base leading-relaxed font-medium">
         {editingQuestion.title}
       </div>
+
+      {/* 题目提示 */}
+      {editingQuestion.tip && (
+        <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg border-l-4 border-blue-500">
+          <div className="font-medium text-gray-700 mb-1">提示：</div>
+          <div>{editingQuestion.tip}</div>
+        </div>
+      )}
 
       {/* 第三行：网络链接 */}
       {editingQuestion.links && editingQuestion.links.length > 0 && (
@@ -238,20 +246,22 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
       )}
 
       {/* 最后一行：答案（可编辑） */}
-      <div className="space-y-2">
-        <div className="flex items-start space-x-2">
-          <div className="text-sm font-medium text-gray-700 min-w-fit">答案：</div>
-          <div className="flex-1">
-            <textarea
-              value={editingQuestion.answer || ''}
-              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleAnswerChange(e.target.value)}
-              placeholder="请输入答案..."
-              rows={3}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
+      {editingQuestion.material && (
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <div className="text-sm font-medium text-gray-700 min-w-fit">材料：</div>
+            <div className="flex-1">
+              <textarea
+                value={editingQuestion.material || ''}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleAnswerChange(e.target.value)}
+                placeholder="AI自动填入材料"
+                rows={3}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

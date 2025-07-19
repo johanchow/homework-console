@@ -33,14 +33,13 @@ export type Question = {
   /* 提示或者要求 */
   tip: string;
   options?: string[];
+  links?: string[];
   images?: string[];
   videos?: string[];
   audios?: string[];
   attachments?: string[];
   /* AI提取后的文件内容 */
-  file_contents?: Record<string, string>;
-  links?: string[];
-  answer?: string;
+  material?: string;
   creator_id: string;
   created_at: Date;
   updated_at: Date;

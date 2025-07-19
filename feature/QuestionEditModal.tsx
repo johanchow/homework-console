@@ -265,11 +265,11 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
 
           {/* 答案 */}
           <div className="space-y-2">
-            <Label htmlFor="answer">答案</Label>
+            <Label htmlFor="answer">材料</Label>
             {formData.type === QuestionType.qa ? (
               <textarea
                 id="answer"
-                value={formData.answer}
+                value={formData.material}
                 onChange={(e) => handleInputChange('answer', e.target.value)}
                 placeholder="输入答案"
                 rows={4}
@@ -288,7 +288,7 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
           {/* 媒体文件 */}
           <div className="space-y-4">
             <h3 className="text-lg font-medium">媒体文件</h3>
-            
+
             {/* 图片 */}
             <div className="space-y-2">
               <Label>图片文件</Label>
