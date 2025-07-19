@@ -26,10 +26,10 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
     })
   }, [question])
 
-  const handleAnswerChange = (answer: string) => {
+  const handleAnswerChange = (material: string) => {
     const updatedQuestion = {
       ...editingQuestion,
-      answer,
+      material,
       updated_at: new Date()
     }
     setEditingQuestion(updatedQuestion)

@@ -32,7 +32,7 @@
  */
 
 import * as React from 'react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -53,6 +53,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/component/opt-input'
 import { Checkbox } from '@/component/checkbox'
 import { login, register, logout, sendVerificationCode } from '@/api/axios/user'
+import { useUserStore } from '@/store/useUserStore'
+import { toast } from 'sonner'
 
 // 账号密码登录表单验证
 const accountLoginSchema = z.object({
@@ -94,12 +96,12 @@ type AccountRegisterForm = z.infer<typeof accountRegisterSchema>
 type PhoneRegisterForm = z.infer<typeof phoneRegisterSchema>
 
 interface LoginRegisterModalProps {
-  children: React.ReactNode
+  children?: React.ReactNode
   onSuccess?: () => void
 }
 
 export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalProps) {
-  const [open, setOpen] = useState(false)
+  const { showLoginModal, setShowLoginModal, setUser } = useUserStore()
   const [mode, setMode] = useState<'login' | 'register'>('login')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -158,7 +160,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
       const respData = await login(data)
       setCookie(process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME!, respData.token)
       setCookie(process.env.NEXT_PUBLIC_USERID_COOKIE_NAME!, respData.user.id)
-      setOpen(false)
+      setUser(respData.user)
+      setShowLoginModal(false)
+      toast.success('登录成功！')
       onSuccess?.()
     } catch (error: any) {
       console.error('登录失败:', error)
@@ -175,7 +179,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
     try {
       const response = await login(data)
       setCookie('token', response.token)
-      setOpen(false)
+      setUser(response.user)
+      setShowLoginModal(false)
+      toast.success('登录成功！')
       onSuccess?.()
     } catch (error: any) {
       console.error('登录失败:', error)
@@ -197,7 +203,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
       })
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
-      setOpen(false)
+      setUser(response.user)
+      setShowLoginModal(false)
+      toast.success('注册成功！')
       onSuccess?.()
     } catch (error: any) {
       console.error('注册失败:', error)
@@ -219,7 +227,9 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
       })
       localStorage.setItem('token', response.token)
       localStorage.setItem('user', JSON.stringify(response.user))
-      setOpen(false)
+      setUser(response.user)
+      setShowLoginModal(false)
+      toast.success('注册成功！')
       onSuccess?.()
     } catch (error: any) {
       console.error('注册失败:', error)
@@ -256,7 +266,8 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   }
 
   const handleOpenChange = (newOpen: boolean) => {
-    setOpen(newOpen)
+    setShowLoginModal(newOpen)
+
     if (!newOpen) {
       setError('')
       setCountdown(0)
@@ -269,10 +280,12 @@ export function LoginRegisterModal({ children, onSuccess }: LoginRegisterModalPr
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+    <Dialog open={showLoginModal} onOpenChange={handleOpenChange}>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>

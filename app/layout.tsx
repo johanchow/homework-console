@@ -5,6 +5,8 @@ import { Header } from '@/feature/Header'
 import { ReactQueryProvider } from '@/api/query-base/client-query'
 import { createServerQueryClient } from '@/api/query-base/server-query'
 import { getUserProfile } from '@/api/fetch/user'
+import { GlobalLoginModal } from '@/feature/GlobalLoginModal'
+import { Toaster } from '@/component/sonner'
 
 export const metadata: Metadata = {
   title: '自主学习',
@@ -38,6 +40,8 @@ export default async function RootLayout({
             <main className="flex-1">
               {children}
             </main>
+            {/* <GlobalLoginModal /> */}
+            <Toaster />
           </ReactQueryProvider>
         </div>
       </body>
