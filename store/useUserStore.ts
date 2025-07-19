@@ -3,7 +3,9 @@ import type { User } from "@/entity/user";
 
 interface UserState {
   user: User;
-  updateUser: (user: User) => void;
+  setUser: (user: User) => void;
+  showLoginModal: boolean;
+  setShowLoginModal: (show: boolean) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -13,5 +15,7 @@ export const useUserStore = create<UserState>((set) => ({
     phone: "",
     avatar: "",
   },
-  updateUser: (user) => set({ user }),
+  showLoginModal: false,
+  setUser: (user) => set({ user }),
+  setShowLoginModal: (show) => set({ showLoginModal: show }),
 }));

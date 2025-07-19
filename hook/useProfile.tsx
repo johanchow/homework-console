@@ -5,7 +5,7 @@ import { getCookie } from "@/util/cookie";
 import type { User } from "@/entity/user";
 
 export const useProfile = () => {
-  const { user, updateUser } = useUserStore();
+  const { user, setUser } = useUserStore();
   const queryClient = getQueryClient();
   const cookieUserId = getCookie(process.env.NEXT_PUBLIC_USERID_COOKIE_NAME!);
   let currentUser: User | undefined;
@@ -17,12 +17,12 @@ export const useProfile = () => {
 
   useEffect(() => {
     if (currentUser) {
-      updateUser(currentUser);
+      setUser(currentUser);
     }
   }, [currentUser]);
 
   return {
     user,
-    isAuthenticated: !!user.id,
+    isAuthenticated: !!user?.id,
   };
 };

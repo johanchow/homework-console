@@ -1,19 +1,23 @@
 'use client'
 
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/component/button'
-import { Badge } from '@/component/badge'
-import { Upload, Check, X, Loader2, Edit, Trash2 } from 'lucide-react'
-import { Question, QuestionType } from '@/entity/question'
+import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
+import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
-import { parseQuestionFromImages } from '@/api/axios/question'
+import { Input } from '@/component/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { QuestionShow } from './QuestionShow'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/component/dialog'
+import { UrlLink } from '@/component/url-link'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
 }
 
-interface UploadedImage {
+interface UploadedFile {
   file: File
   preview: string
   url?: string
@@ -22,140 +26,195 @@ interface UploadedImage {
   uploadError?: string
 }
 
-export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportProps) {
-  const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([])
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [parsedQuestions, setParsedQuestions] = useState<Question[]>([])
-  const [editingQuestionIndex, setEditingQuestionIndex] = useState<number | null>(null)
+interface FormData {
+  title: string
+  type: QuestionType
+  tip: string
+}
 
-  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportProps) {
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+  const [showPreviewDialog, setShowPreviewDialog] = useState(false)
+  const [currentQuestion, setCurrentQuestion] = useState<Partial<Question> | null>(null)
+  const [links, setLinks] = useState<string[]>([''])
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors }
+  } = useForm<FormData>({
+    defaultValues: {
+      title: '',
+      type: QuestionType.choice,
+      tip: ''
+    }
+  })
+
+  const watchedType = watch('type')
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
 
     files.forEach(async (file) => {
-      if (file.type.startsWith('image/')) {
-        // 生成预览
-        const reader = new FileReader()
-        reader.onload = (e) => {
-          const preview = e.target?.result as string
+      // 生成预览
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        const preview = e.target?.result as string
 
-          // 添加到列表，标记为上传中
-          const newImage: UploadedImage = {
-            file,
-            preview,
-            isUploading: true,
-            uploadSuccess: false
-          }
-
-          setUploadedImages(prev => {
-            const newList = [...prev, newImage]
-            // 立即开始上传
-            handleUploadSingleImage(newImage, newList.length - 1)
-            return newList
-          })
+        // 添加到列表，标记为上传中
+        const newFile: UploadedFile = {
+          file,
+          preview,
+          isUploading: true,
+          uploadSuccess: false
         }
-        reader.readAsDataURL(file)
+
+        setUploadedFiles(prev => {
+          const newList = [...prev, newFile]
+          // 立即开始上传
+          handleUploadSingleFile(newFile, newList.length - 1)
+          return newList
+        })
       }
+      reader.readAsDataURL(file)
     })
   }
 
-  const handleUploadSingleImage = async (image: UploadedImage, index: number) => {
+  const handleUploadSingleFile = async (file: UploadedFile, index: number) => {
     try {
-      const result = await uploadFile(image.file)
+      const result = await uploadFile(file.file)
 
-      setUploadedImages(prev => prev.map((img, i) => {
+      setUploadedFiles(prev => prev.map((f, i) => {
         if (i === index) {
           return {
-            ...img,
+            ...f,
             isUploading: false,
             uploadSuccess: result.success,
             url: result.success ? result.url : undefined,
             uploadError: result.success ? undefined : '上传失败'
           }
         }
-        return img
+        return f
       }))
+
+      // 如果上传成功，更新 currentQuestion
+      if (result.success) {
+        updateCurrentQuestionWithFile(file.file, result.url!)
+      }
     } catch (error) {
-      setUploadedImages(prev => prev.map((img, i) => {
+      setUploadedFiles(prev => prev.map((f, i) => {
         if (i === index) {
           return {
-            ...img,
+            ...f,
             isUploading: false,
             uploadSuccess: false,
             uploadError: '上传失败'
           }
         }
-        return img
+        return f
       }))
     }
   }
 
-  const handleRemoveImage = (index: number) => {
-    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  const updateCurrentQuestionWithFile = (file: File, url: string) => {
+    setCurrentQuestion(prev => {
+      const updated = { ...prev } as Partial<Question>
+
+      if (file.type.startsWith('image/')) {
+        updated.images = [...(updated.images || []), url]
+      } else if (file.type.startsWith('video/')) {
+        updated.videos = [...(updated.videos || []), url]
+      } else if (file.type.startsWith('audio/')) {
+        updated.audios = [...(updated.audios || []), url]
+      }
+
+      return updated
+    })
   }
 
-  const handleProcessImages = async () => {
-    const successImages = uploadedImages.filter(img => img.uploadSuccess && img.url)
+  const handleRemoveFile = (index: number) => {
+    const fileToRemove = uploadedFiles[index]
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
 
-    if (successImages.length === 0) {
-      console.error('没有成功上传的图片')
-      return
-    }
+    // 从 currentQuestion 中移除对应的文件
+    if (fileToRemove.uploadSuccess && fileToRemove.url) {
+      setCurrentQuestion(prev => {
+        const updated = { ...prev } as Partial<Question>
 
-    setIsProcessing(true)
+        if (fileToRemove.file.type.startsWith('image/')) {
+          updated.images = updated.images?.filter(url => url !== fileToRemove.url) || []
+        } else if (fileToRemove.file.type.startsWith('video/')) {
+          updated.videos = updated.videos?.filter(url => url !== fileToRemove.url) || []
+        } else if (fileToRemove.file.type.startsWith('audio/')) {
+          updated.audios = updated.audios?.filter(url => url !== fileToRemove.url) || []
+        }
 
-    try {
-      // 调用API解析图片
-      const imageUrls = successImages.map(img => img.url!)
-
-      const parseResult = await parseQuestionFromImages({
-        image_urls: imageUrls
+        return updated
       })
-
-      // 为解析的题目添加id字段
-      const questionsWithId = parseResult.questions.map((question, index) => ({
-        ...question,
-        id: `parsed-${Date.now()}-${index}`
-      }))
-
-      setParsedQuestions(questionsWithId)
-      setIsProcessing(false)
-
-    } catch (error) {
-      console.error('解析图片失败:', error)
-      setIsProcessing(false)
     }
   }
 
-  const handleEditQuestion = (index: number) => {
-    setEditingQuestionIndex(index)
-  }
+  const handlePreview = handleSubmit(() => {
+    const formData = watch()
+    const files = uploadedFiles.filter(f => f.uploadSuccess && f.url)
+    setCurrentQuestion(prev => ({
+      ...prev,
+      // 图片类的
+      images: files.filter(f => f.file.type.startsWith('image/')).map(f => f.url!),
+      // 文档类的文件，作为附件
+      attachments: files.filter(f => f.file.type.startsWith('application/pdf') || f.file.type.startsWith('application/vnd.ms-powerpoint') || f.file.type.startsWith('application/vnd.openxmlformats-officedocument.presentationml.presentation')).map(f => f.url!),
+      // 音频
+      audios: files.filter(f => f.file.type.startsWith('audio/')).map(f => f.url!),
+      // 视频
+      videos: files.filter(f => f.file.type.startsWith('video/')).map(f => f.url!),
+      // 网络链接
+      links: links.filter(link => link.trim()),
+      title: formData.title,
+      type: formData.type,
+      tip: formData.tip
+    }))
+    setShowPreviewDialog(true)
+  })
 
-  const handleDeleteQuestion = (index: number) => {
-    setParsedQuestions(prev => prev.filter((_, i) => i !== index))
-  }
-
-  const handleQuestionChange = (updatedQuestion: Question) => {
-    if (editingQuestionIndex !== null) {
-      setParsedQuestions(prev => prev.map((q, i) =>
-        i === editingQuestionIndex ? updatedQuestion : q
-      ))
+  const handleConfirm = () => {
+    if (currentQuestion && currentQuestion.title && currentQuestion.type) {
+      const completeQuestion: Question = {
+        id: uuidv4(),
+        title: currentQuestion.title,
+        type: currentQuestion.type,
+        subject: currentQuestion.subject || '',
+        tip: currentQuestion.tip || '',
+        options: currentQuestion.options || [],
+        images: currentQuestion.images || [],
+        videos: currentQuestion.videos || [],
+        audios: currentQuestion.audios || [],
+        attachments: currentQuestion.attachments || [],
+        links: currentQuestion.links || [],
+        material: currentQuestion.material || '',
+        creator_id: currentQuestion.creator_id || '',
+        created_at: currentQuestion.created_at || new Date(),
+        updated_at: currentQuestion.updated_at || new Date()
+      }
+      onQuestionSelected(completeQuestion)
+      setShowPreviewDialog(false)
     }
   }
 
-  const handleSelectQuestion = (question: Question) => {
-    onQuestionSelected(question)
-  }
-
-  const getQuestionTypeLabel = (type: QuestionType) => {
-    const typeMap = {
-      [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
-      [QuestionType.judge]: '判断题'
+  const getFileIcon = (file: File) => {
+    if (file.type.startsWith('image/')) {
+      return <Image className="w-4 h-4 text-blue-500" />
+    } else if (file.type.startsWith('video/')) {
+      return <Video className="w-4 h-4 text-purple-500" />
+    } else if (file.type.startsWith('audio/')) {
+      return <Music className="w-4 h-4 text-green-500" />
+    } else {
+      return <FileText className="w-4 h-4 text-gray-500" />
     }
-    return typeMap[type] || type
   }
 
-  const successCount = uploadedImages.filter(img => img.uploadSuccess && img.url).length
+  const successCount = uploadedFiles.filter(f => f.uploadSuccess && f.url).length
 
   return (
     <div className="space-y-6">
@@ -164,131 +223,161 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         <h3 className="text-lg font-semibold">智能导入题目</h3>
       </div>
 
-      <div className="space-y-4">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-          <div className="text-center">
-            <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-sm text-gray-600 mb-4">
-              支持 JPG、PNG、PDF 格式，可上传多张图片
-            </p>
-            <input
-              type="file"
-              multiple
-              accept="image/*,.pdf"
-              onChange={handleImageUpload}
-              className="hidden"
-              id="image-upload"
+      <form className='space-y-4'>
+        <div className='flex items-center space-x-4'>
+          <div className="flex-1">
+            <Input
+              placeholder='请输入题目名称'
+              {...register('title', { required: '题目名称是必填项' })}
+              className={`rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.title ? 'border-red-500' : ''
+                }`}
             />
-            <label htmlFor="image-upload">
-              <Button variant="outline" asChild>
-                <span>选择图片</span>
-              </Button>
-            </label>
+            {errors.title && (
+              <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
+            )}
+          </div>
+          <div className="w-48">
+            <Select
+              value={watchedType}
+              onValueChange={(value) => setValue('type', value as QuestionType)}
+            >
+              <SelectTrigger className={errors.type ? 'border-red-500' : ''}>
+                <SelectValue placeholder="选择题目类型" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(QuestionType).map((type) => (
+                  <SelectItem key={type} value={type}>{questionTypeLabel[type]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.type && (
+              <p className="text-red-500 text-xs mt-1">{errors.type.message}</p>
+            )}
           </div>
         </div>
 
-        {uploadedImages.length > 0 && (
+        <div className="flex-1">
+          <Input
+            placeholder='请输入题目提示或要求（可选）'
+            {...register('tip')}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          />
+        </div>
+      </form>
+
+      {/* 网络链接url */}
+      <UrlLink
+        value={links}
+        onChange={setLinks}
+        label="网络链接"
+        placeholder="请输入URL链接"
+        maxUrls={5}
+      />
+
+      <div className="space-y-4">
+        <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 cursor-pointer">
+          <div className="text-center">
+            <label htmlFor="image-upload">
+              <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+              <p className="text-sm text-gray-600 mb-4">
+                支持 JPG、PNG、PDF、视频、音频格式，可上传多个文件
+              </p>
+            </label>
+            <input
+              type="file"
+              multiple
+              accept="image/*,video/*,audio/*,application/pdf,
+                  application/vnd.ms-powerpoint,
+                  application/vnd.openxmlformats-officedocument.presentationml.presentation,
+                  application/msword,
+                  application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              onChange={handleFileUpload}
+              className="hidden"
+              id="image-upload"
+            />
+          </div>
+        </div>
+
+        {/* 上传成功的文件列表 */}
+        {uploadedFiles.length > 0 && (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="font-medium">已上传图片 ({uploadedImages.length})</h4>
-              <Badge variant={successCount > 0 ? "default" : "secondary"}>
-                成功: {successCount}
-              </Badge>
+              <h4 className="font-medium">已上传文件 ({uploadedFiles.length})</h4>
             </div>
-            <div className="grid grid-cols-4 md:grid-cols-6 gap-2">
-              {uploadedImages.map((image, index) => (
-                <div key={index} className="relative border rounded-lg p-1">
-                  <div className="aspect-square bg-gray-100 rounded overflow-hidden relative">
-                    <img
-                      src={image.preview}
-                      alt={`图片 ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    {/* 上传状态覆盖层 - 只在非成功状态显示 */}
-                    {!image.uploadSuccess && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                        {image.isUploading ? (
-                          <Loader2 className="w-6 h-6 text-white animate-spin" />
-                        ) : (
-                          <X className="w-6 h-6 text-red-400" />
-                        )}
-                      </div>
-                    )}
-                    {/* 成功状态指示 - 在右上角显示绿色勾号 */}
-                    {image.uploadSuccess && (
-                      <div className="absolute top-1 right-1 bg-green-500 rounded-full p-1">
-                        <Check className="w-3 h-3 text-white" />
-                      </div>
+            <div className="flex flex-wrap gap-2">
+              {uploadedFiles.map((file, index) => (
+                <div key={index} className="flex items-center space-x-2 px-3 py-2 bg-gray-50 rounded-lg border">
+                  <div className="relative">
+                    {file.isUploading ? (
+                      <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
+                    ) : file.uploadSuccess ? (
+                      <Check className="w-4 h-4 text-green-500" />
+                    ) : (
+                      <X className="w-4 h-4 text-red-500" />
                     )}
                   </div>
-                  <p className="text-xs mt-1 truncate text-center">{image.file.name}</p>
+                  {getFileIcon(file.file)}
+                  <span className="text-sm font-medium max-w-32 truncate">{file.file.name}</span>
+                  {file.uploadError && (
+                    <span className="text-xs text-red-500">{file.uploadError}</span>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="absolute -top-1 -right-1 h-5 w-5 p-0 bg-white border rounded-full shadow-sm hover:bg-red-50"
-                    onClick={() => handleRemoveImage(index)}
+                    className="h-6 w-6 p-0 hover:bg-red-50 ml-1"
+                    onClick={() => handleRemoveFile(index)}
                   >
                     <X className="w-3 h-3 text-red-500" />
                   </Button>
                 </div>
               ))}
             </div>
-
-            <div className="flex gap-2">
-              <Button
-                onClick={handleProcessImages}
-                disabled={isProcessing || successCount === 0}
-                className="flex-1"
-              >
-                {isProcessing ? '解析中...' : `开始解析图片 (${successCount} 张)`}
-              </Button>
-            </div>
           </div>
         )}
+
+        <div className="flex justify-center gap-4">
+          <Button
+            variant="outline"
+            className='w-32'
+            onClick={handlePreview}
+          >
+            预览
+          </Button>
+        </div>
       </div>
 
-      {/* 解析结果 */}
-      {parsedQuestions.length > 0 && (
-        <div className="space-y-4 border-t pt-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold">解析结果</h3>
-            <Badge variant="secondary">{parsedQuestions.length} 道题目</Badge>
-          </div>
-
-          <div className="space-y-6 max-h-80 overflow-y-auto overscroll-contain">
-            {parsedQuestions.map((question, index) => (
-              <div key={question.id} className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-md font-medium">题目 {index + 1}</h4>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditQuestion(index)}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      <Edit className="w-4 h-4 mr-1" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteQuestion(index)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+      {/* 预览模态框 */}
+      <Dialog open={showPreviewDialog} onOpenChange={setShowPreviewDialog}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>题目预览</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {currentQuestion && currentQuestion.type && (
+              <div className="border rounded-lg p-2 bg-gray-50 min-h-[200px]">
                 <QuestionShow
-                  question={question}
-                  enableChange={editingQuestionIndex === index}
-                  onChange={handleQuestionChange}
+                  question={currentQuestion as Question}
+                  onChange={() => { }}
                 />
               </div>
-            ))}
+            )}
           </div>
-        </div>
-      )}
+          <DialogFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => setShowPreviewDialog(false)}
+            >
+              返回修改
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              disabled={!currentQuestion?.title || !currentQuestion?.type}
+            >
+              确定
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

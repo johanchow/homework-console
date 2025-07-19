@@ -8,8 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, Trash2, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
 import { QuestionFromImport } from './QuestionFromImport'
-import { Question } from '@/entity/question'
-import { QuestionType } from '@/entity/question'
+import { Question, questionTypeLabel } from '@/entity/question'
 
 interface QuestionAddingProps {
   currentQuestions: Question[];
@@ -39,15 +38,6 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
     onQuestionsUpdated(updatedQuestions)
   }
 
-  const getQuestionTypeLabel = (type: QuestionType) => {
-    const typeMap = {
-      [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
-      [QuestionType.judge]: '判断题'
-    }
-    return typeMap[type] || type
-  }
-
   return (
     <div className="space-y-6">
       {/* 已出题目列表 */}
@@ -71,31 +61,35 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
                 <span className="text-sm text-gray-600">已添加题目：</span>
                 <span className="text-lg font-semibold text-blue-600">{questions.length}</span>
               </div>
-              <Badge variant="secondary">数学</Badge>
+              <div className="flex items-center space-x-4">
+                {questions.map((question) => (
+                  <Badge variant="secondary" key={question.id}>{question.title}</Badge>
+                ))}
+              </div>
             </div>
+          </div>
 
-            {/* 题目列表 */}
-            <div className="space-y-3">
-              {questions.map((question) => (
-                <div key={question.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{question.title}</h4>
-                    <div className="flex items-center space-x-2 mt-1">
-                      <Badge variant="outline" className="text-xs">{getQuestionTypeLabel(question.type)}</Badge>
-                      <Badge variant="outline" className="text-xs">{question.subject}</Badge>
-                    </div>
+          {/* 题目列表 */}
+          <div className="space-y-3">
+            {questions.map((question) => (
+              <div key={question.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div className="flex-1">
+                  <h4 className="font-medium text-gray-900">{question.title}</h4>
+                  <div className="flex items-center space-x-2 mt-1">
+                    <Badge variant="outline" className="text-xs">{questionTypeLabel[question.type]}</Badge>
+                    <Badge variant="outline" className="text-xs">{question.subject}</Badge>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                    onClick={() => handleDeleteQuestion(question.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
                 </div>
-              ))}
-            </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700"
+                  onClick={() => handleDeleteQuestion(question.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
@@ -109,15 +103,15 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="ai" className="w-full">
+          <Tabs defaultValue="import" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="ai" className="flex items-center">
-                <Bot className="w-4 h-4 mr-2" />
-                AI出题
-              </TabsTrigger>
               <TabsTrigger value="import" className="flex items-center">
                 <Upload className="w-4 h-4 mr-2" />
                 智能录入
+              </TabsTrigger>
+              <TabsTrigger value="ai" className="flex items-center">
+                <Bot className="w-4 h-4 mr-2" />
+                AI出题
               </TabsTrigger>
             </TabsList>
 
@@ -137,6 +131,6 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+    </div >
   )
 }
