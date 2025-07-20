@@ -21,6 +21,8 @@ export type Exam = {
   question_id_list: string[];
   examinee_id: string;
   status: ExamStatus;
+  plan_duration: number;
+  plan_starttime: Date;
   answer?: Answer;
   created_at: string;
   updated_at: string;
