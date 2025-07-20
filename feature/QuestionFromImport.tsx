@@ -2,16 +2,17 @@
 
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { v4 as uuidv4 } from 'uuid'
 import { Button } from '@/component/button'
 import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
-import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
+import { Question, QuestionType, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
 import { Input } from '@/component/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { QuestionShow } from './QuestionShow'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/component/dialog'
 import { UrlLink } from '@/component/url-link'
+import { Label } from '@/component/label'
+import { newUuid } from '@/util'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
@@ -28,6 +29,7 @@ interface UploadedFile {
 
 interface FormData {
   title: string
+  subject: QuestionSubject
   type: QuestionType
   tip: string
 }
@@ -47,12 +49,14 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   } = useForm<FormData>({
     defaultValues: {
       title: '',
+      subject: QuestionSubject.chinese,
       type: QuestionType.choice,
       tip: ''
     }
   })
 
   const watchedType = watch('type')
+  const watchedSubject = watch('subject')
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || [])
@@ -172,6 +176,7 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
       // 网络链接
       links: links.filter(link => link.trim()),
       title: formData.title,
+      subject: formData.subject,
       type: formData.type,
       tip: formData.tip
     }))
@@ -181,7 +186,7 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   const handleConfirm = () => {
     if (currentQuestion && currentQuestion.title && currentQuestion.type) {
       const completeQuestion: Question = {
-        id: uuidv4(),
+        id: newUuid(),
         title: currentQuestion.title,
         type: currentQuestion.type,
         subject: currentQuestion.subject || '',
@@ -224,19 +229,56 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
       </div>
 
       <form className='space-y-4'>
-        <div className='flex items-center space-x-4'>
-          <div className="flex-1">
-            <Input
-              placeholder='请输入题目名称'
-              {...register('title', { required: '题目名称是必填项' })}
-              className={`rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.title ? 'border-red-500' : ''
-                }`}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
+        {/* 第1行：题目名称 */}
+        <div className="space-y-2">
+          <Label htmlFor="title" className="flex items-center">
+            题目名称
+            <span className="text-red-500 ml-1">*</span>
+          </Label>
+          <Input
+            id="title"
+            placeholder='请输入题目名称'
+            {...register('title', { required: '题目名称是必填项' })}
+            className={`rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${errors.title ? 'border-red-500' : ''
+              }`}
+          />
+          {errors.title && (
+            <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
+          )}
+        </div>
+
+        {/* 第2行：科目和类型 */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="subject" className="flex items-center">
+              科目
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
+            <Select
+              value={watchedSubject}
+              onValueChange={(value) => setValue('subject', value as QuestionSubject)}
+            >
+              <SelectTrigger className={errors.subject ? 'border-red-500' : ''}>
+                <SelectValue placeholder="选择科目" />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(QuestionSubject).map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {questionSubjectLabel[subject]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.subject && (
+              <p className="text-red-500 text-xs mt-1">{errors.subject.message}</p>
             )}
           </div>
-          <div className="w-48">
+
+          <div className="space-y-2">
+            <Label htmlFor="type" className="flex items-center">
+              题目类型
+              <span className="text-red-500 ml-1">*</span>
+            </Label>
             <Select
               value={watchedType}
               onValueChange={(value) => setValue('type', value as QuestionType)}
@@ -256,8 +298,11 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
           </div>
         </div>
 
-        <div className="flex-1">
+        {/* 第3行：题目提示 */}
+        <div className="space-y-2">
+          <Label htmlFor="tip">题目提示</Label>
           <Input
+            id="tip"
             placeholder='请输入题目提示或要求（可选）'
             {...register('tip')}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"

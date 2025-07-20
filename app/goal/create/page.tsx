@@ -12,6 +12,7 @@ import { useUserStore } from '@/store/useUserStore'
 import { Exam, Goal, Question, ExamStatus } from '@/entity'
 import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
 import { Duration } from '@/component/duration'
+import Calendar from '@/component/calendar'
 
 interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject' | 'ai_prompt'> {
   questions: Question[]
@@ -30,7 +31,6 @@ export default function CreateGoalPage() {
     questions: [],
     assignees: [],
     start_time: '',
-    duration: { hours: 0, minutes: 0 }
   })
 
   const handleInputChange = (field: string, value: string) => {
@@ -85,9 +85,11 @@ export default function CreateGoalPage() {
     // 3. 再创建考试
     const newExam = {
       goal_id: goal.id,
-      question_id_list: questions.map(question => question.id),
+      question_ids: questions.map(question => question.id),
       examinee_id: user?.id,
-      status: ExamStatus.PREPARING,
+      status: ExamStatus.PENDING,
+      plan_duration: formData.duration!.hours * 60 + formData.duration!.minutes,
+      plan_starttime: formData.start_time!,
     }
     const exam = await createExam(newExam)
     alert('创建成功');
@@ -196,12 +198,12 @@ export default function CreateGoalPage() {
           {/* 开始时间和预计用时 */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="start_time">开始时间（可选）</Label>
-              <Input
-                id="start_time"
-                type="date"
-                value={formData.start_time}
-                onChange={(e) => handleInputChange('start_time', e.target.value)}
+              <Label>开始时间（可选）</Label>
+              <Calendar
+                selected={formData.start_time}
+                onSelect={(date) => handleInputChange('start_time', date || '')}
+                placeholder="选择开始时间"
+                precision="minute"
               />
             </div>
 

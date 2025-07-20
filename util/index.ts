@@ -7,6 +7,6 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function newUuid() {
-  // 生成一个随机id，10位
-  return uuidv4().slice(0, 10);
+  // 去掉-符号，生成一个随机id，10位
+  return uuidv4().replace(/-/g, "").slice(0, 10);
 }

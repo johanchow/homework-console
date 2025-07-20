@@ -18,9 +18,11 @@ export enum ExamStatus {
 export type Exam = {
   id: string;
   goal_id: string;
-  question_id_list: string[];
+  question_ids: string[];
   examinee_id: string;
   status: ExamStatus;
+  plan_duration: number;
+  plan_starttime: Date;
   answer?: Answer;
   created_at: string;
   updated_at: string;

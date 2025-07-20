@@ -45,9 +45,15 @@ export const analyzeQuestionAnswer = async (
   question: Question
 ): Promise<Question> => {
   console.log("analyzeQuestionAnswer", question);
-  const response = await request.post(`/ai/analyze-question`, {
-    question,
-  });
+  const response = await request.post(
+    `/ai/analyze-question`,
+    {
+      question,
+    },
+    {
+      timeout: 20 * 1000,
+    }
+  );
 
   return response.data.question;
 };
