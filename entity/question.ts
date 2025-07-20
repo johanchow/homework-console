@@ -7,6 +7,17 @@ export enum QuestionType {
   show = "show",
 }
 
+export enum QuestionSubject {
+  chinese = "chinese",
+  math = "math",
+  english = "english",
+  computer = "computer",
+  physics = "physics",
+  chemistry = "chemistry",
+  history = "history",
+  geography = "geography",
+}
+
 export const questionTypeLabel = {
   [QuestionType.choice]: "选择题",
   [QuestionType.qa]: "问答题",
@@ -23,6 +34,17 @@ export const questionTypeIcon = {
   [QuestionType.reading]: "📖",
   [QuestionType.summary]: "📝",
   [QuestionType.show]: "🎭",
+};
+
+export const questionSubjectLabel = {
+  [QuestionSubject.chinese]: "语文",
+  [QuestionSubject.math]: "数学",
+  [QuestionSubject.english]: "英语",
+  [QuestionSubject.computer]: "计算机科学",
+  [QuestionSubject.physics]: "物理",
+  [QuestionSubject.chemistry]: "化学",
+  [QuestionSubject.history]: "历史",
+  [QuestionSubject.geography]: "地理",
 };
 
 export type Question = {

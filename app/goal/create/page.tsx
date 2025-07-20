@@ -85,7 +85,7 @@ export default function CreateGoalPage() {
     // 3. 再创建考试
     const newExam = {
       goal_id: goal.id,
-      question_id_list: questions.map(question => question.id),
+      question_ids: questions.map(question => question.id),
       examinee_id: user?.id,
       status: ExamStatus.PENDING,
       plan_duration: formData.duration!.hours * 60 + formData.duration!.minutes,
