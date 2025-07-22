@@ -5,7 +5,7 @@ import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
 import { X, Image as ImageIcon, Video, Volume2, Play, Pause, FileText, Link as LinkIcon } from 'lucide-react'
 import { Question, QuestionType, questionTypeLabel, questionTypeIcon } from '@/entity/question'
-import { analyzeQuestionAnswer } from '@/api/axios/question'
+import { analyzeQuestionMaterial } from '@/api/axios/question'
 
 interface QuestionShowProps {
   question: Question
@@ -18,7 +18,7 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
 
   useEffect(() => {
-    analyzeQuestionAnswer(question).then((newQuestion) => {
+    analyzeQuestionMaterial(question).then((newQuestion) => {
       setEditingQuestion({
         ...question,
         ...newQuestion,
