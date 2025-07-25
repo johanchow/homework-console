@@ -27,7 +27,3 @@ export type Goal = {
   /* updated_at: 更新时间 */
   updated_at: string;
 };
-
-export type GoalFull = Goal & {
-  exams: Exam[];
-};

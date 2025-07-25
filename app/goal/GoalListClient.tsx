@@ -43,7 +43,7 @@ export function GoalListClient() {
       page: currentPage,
       page_size: itemsPerPage,
     }),
-    staleTime: 5 * 60 * 1000, // 5分钟缓存
+    staleTime: 2 * 60 * 1000, // 5分钟缓存
   })
 
   // 过滤数据

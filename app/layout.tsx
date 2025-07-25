@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './global.css'
 import { Header } from '@/feature/Header'
 import { ReactQueryProvider } from '@/api/query-base/client-query'
@@ -21,7 +22,7 @@ export default async function RootLayout({
   const serverQuery = createServerQueryClient()
   const cookieStore = await cookies()
   const userId = cookieStore.get(process.env.NEXT_PUBLIC_USERID_COOKIE_NAME!)?.value
-  console.log('userId: ', userId)
+  console.log('userId ==================== ', userId)
   if (userId) {
     await serverQuery.prefetch([
       {
@@ -36,12 +37,14 @@ export default async function RootLayout({
       <body>
         <div className="min-h-screen flex flex-col">
           <ReactQueryProvider state={serverQuery.dehydratedState()}>
+            <ReactQueryDevtools />
             <Header />
             <main className="flex-1">
               {children}
             </main>
             {/* <GlobalLoginModal /> */}
             <Toaster />
+            <ReactQueryDevtools />
           </ReactQueryProvider>
         </div>
       </body>
