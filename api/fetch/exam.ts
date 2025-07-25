@@ -25,7 +25,10 @@ const listExams = async (
       method: "GET",
     }
   );
-  console.log("fetch listExams response: ", data);
+  console.log(
+    "fetch listExams response: ",
+    data.exams.map((exam) => exam.id).join("+")
+  );
   return data;
 };
 

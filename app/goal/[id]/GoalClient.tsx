@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import Link from 'next/link'
+import { useState, useRef } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
@@ -9,13 +10,12 @@ import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Goal, GoalStatus } from '@/entity/goal'
+import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
 import { getGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/component/alert-dialog'
+import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
 import { toast } from 'sonner'
 
 const statusConfig = {
@@ -45,6 +45,8 @@ export function GoalClient({ goalId }: GoalClientProps) {
     name: '',
     status: GoalStatus.preparing
   })
+  const [goalDeleteOpen, setGoalDeleteOpen] = useState(false)
+  const [examDeleteOpen, setExamDeleteOpen] = useState<string | null>(null)
 
   // 获取 Goal 数据（使用预取的数据）
   const { data: goal, isLoading: goalLoading, error: goalError } = useQuery({
@@ -250,31 +252,43 @@ export function GoalClient({ goalId }: GoalClientProps) {
                       <Edit className="w-4 h-4 mr-2" />
                       编辑
                     </Button>
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
+                    <Popover open={goalDeleteOpen} onOpenChange={setGoalDeleteOpen}>
+                      <PopoverTrigger asChild>
                         <Button variant="destructive">
                           <Trash2 className="w-4 h-4 mr-2" />
                           删除
                         </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>确认删除</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            确定要删除学习目标 "{goal.name}" 吗？此操作不可撤销，相关的考试记录也会被删除。
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>取消</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => deleteGoalMutation.mutate()}
-                            className="bg-red-600 hover:bg-red-700"
-                          >
-                            确认删除
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4" align="end">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-medium text-sm">确认删除</h4>
+                            <p className="text-sm text-gray-600 mt-1">
+                              确定要删除学习目标 "{goal.name}" 吗？此操作不可撤销，相关的考试记录也会被删除。
+                            </p>
+                          </div>
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setGoalDeleteOpen(false)}
+                            >
+                              取消
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              onClick={() => {
+                                deleteGoalMutation.mutate()
+                                setGoalDeleteOpen(false)
+                              }}
+                            >
+                              确认删除
+                            </Button>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </>
                 ) : (
                   <div className="flex space-x-2">
@@ -412,8 +426,8 @@ export function GoalClient({ goalId }: GoalClientProps) {
                     </div>
                     <div className="flex items-center space-x-2">
                       {getExamButton(exam)}
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
+                      <Popover open={examDeleteOpen === exam.id} onOpenChange={(open) => setExamDeleteOpen(open ? exam.id : null)}>
+                        <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             size="sm"
@@ -422,25 +436,37 @@ export function GoalClient({ goalId }: GoalClientProps) {
                             <Trash2 className="w-4 h-4 mr-1" />
                             删除
                           </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>确认删除考试记录</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              确定要删除这条考试记录吗？此操作不可撤销。
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>取消</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteExamMutation.mutate(exam.id)}
-                              className="bg-red-600 hover:bg-red-700"
-                            >
-                              确认删除
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 p-4" align="end">
+                          <div className="space-y-3">
+                            <div>
+                              <h4 className="font-medium text-sm">确认删除考试记录</h4>
+                              <p className="text-sm text-gray-600 mt-1">
+                                确定要删除这条考试记录吗？此操作不可撤销。
+                              </p>
+                            </div>
+                            <div className="flex justify-end space-x-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setExamDeleteOpen(null)}
+                              >
+                                取消
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => {
+                                  deleteExamMutation.mutate(exam.id)
+                                  setExamDeleteOpen(null)
+                                }}
+                              >
+                                确认删除
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                 ))}

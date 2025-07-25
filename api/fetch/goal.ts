@@ -40,7 +40,7 @@ const getGoal = async (id: string): Promise<Goal> => {
       method: "GET",
     }
   );
-  console.log("fetch getGoal response: ", data);
+  console.log("fetch getGoal response: ", JSON.stringify(data));
   return data;
 };
 
