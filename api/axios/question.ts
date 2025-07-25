@@ -41,10 +41,10 @@ export const parseQuestionFromImages = async (params: {
   return response.data;
 };
 
-export const analyzeQuestionAnswer = async (
+export const analyzeQuestionMaterial = async (
   question: Question
 ): Promise<Question> => {
-  console.log("analyzeQuestionAnswer", question);
+  console.log("analyzeQuestionMaterial", question);
   const response = await request.post(
     `/ai/analyze-question`,
     {
