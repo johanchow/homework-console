@@ -8,7 +8,6 @@ const request = async <T = any>(
   const token = cookieStore.get(
     process.env.NEXT_PUBLIC_TOKEN_COOKIE_NAME!
   )?.value;
-  console.log("getProfile token: ", token);
   const response = await fetch(url, {
     ...options,
     headers: {
@@ -19,6 +18,7 @@ const request = async <T = any>(
   });
   const data = await response.json();
   if (data.code !== 0) {
+    console.error("[ERROR]request url: ", url, "error: ", data);
     throw new Error(data);
   }
   return data.data;

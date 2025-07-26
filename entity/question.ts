@@ -63,8 +63,8 @@ export type Question = {
   /* AI提取后的文件内容 */
   material?: string;
   creator_id: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 };
 
 export default Question;

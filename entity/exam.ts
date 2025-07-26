@@ -18,18 +18,17 @@ export enum ExamStatus {
 export type Exam = {
   id: string;
   goal_id: string;
+  title: string;
   question_ids: string[];
+  questions: Question[];
   examinee_id: string;
   status: ExamStatus;
   plan_duration: number;
-  plan_starttime: Date;
+  plan_starttime: string;
+  actual_starttime?: string;
+  actual_duration?: number;
   answer?: Answer;
   created_at: string;
   updated_at: string;
   finished_at?: string;
-};
-
-export type ExamFull = Exam & {
-  goal: Goal;
-  questions: Question[];
 };

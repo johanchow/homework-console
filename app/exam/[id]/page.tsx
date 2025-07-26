@@ -6,141 +6,120 @@ import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { ArrowLeft, Save, Trash2, Plus, Bot, Upload } from 'lucide-react'
+import { ArrowLeft, Save, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
-import { ExamFull as Exam } from '@/entity/exam'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { Exam, ExamStatus } from '@/entity/exam'
 import { Question, QuestionType } from '@/entity/question'
-import { QuestionFromAI } from '@/feature/QuestionFromAI'
-import { QuestionFromImport } from '@/feature/QuestionFromImport'
 
-// 模拟数据
-const mockExam: Exam = {
-  id: 'exam-1',
-  goal_id: '1',
-  question_ids: ['1', '2', '3'],
-  examinee_id: 'student-001',
-  status: 'pending' as any,
-  created_at: '2024-01-16T09:00:00Z',
-  updated_at: '2024-01-16T10:30:00Z',
-  goal: {
-    id: '1',
-    name: '掌握高等数学微积分',
-    subject: '数学',
-    ai_prompt: '这是一个关于高等数学微积分的学习目标',
-    created_at: '2024-01-15T10:30:00Z',
-    updated_at: '2024-01-20T14:20:00Z'
-  },
-  questions: [
-    {
-      id: '1',
-      subject: '数学',
-      type: QuestionType.choice,
-      title: '求函数 f(x) = x² + 2x + 1 的导数',
-      options: ['2x + 2', '2x + 1', 'x + 2', 'x + 1'],
-      answer: '2x + 2',
-      creator_id: 'teacher-001',
-      created_at: new Date('2024-01-15T10:00:00Z'),
-      updated_at: new Date('2024-01-15T10:00:00Z')
-    },
-    {
-      id: '2',
-      subject: '数学',
-      type: QuestionType.qa,
-      title: '解释什么是微积分的基本定理',
-      answer: '微积分基本定理建立了微分和积分之间的关系...',
-      creator_id: 'teacher-001',
-      created_at: new Date('2024-01-15T10:30:00Z'),
-      updated_at: new Date('2024-01-15T10:30:00Z')
-    },
-    {
-      id: '3',
-      subject: '数学',
-      type: QuestionType.judge,
-      title: '导数的几何意义是函数图像在某点的切线斜率',
-      answer: '正确',
-      creator_id: 'teacher-001',
-      created_at: new Date('2024-01-15T11:00:00Z'),
-      updated_at: new Date('2024-01-15T11:00:00Z')
-    }
-  ]
-}
+import { QuestionShow } from '@/feature/QuestionShow'
+import { getExam } from '@/api/axios/exam'
+import { toast } from 'sonner'
 
 export default function ExamEditPage() {
   const params = useParams()
   const examId = params.id as string
-  
-  const [exam, setExam] = useState<Exam>(mockExam)
-  const [title, setTitle] = useState(exam.goal.name)
-  const [questions, setQuestions] = useState<Question[]>(exam.questions)
+  const queryClient = useQueryClient()
 
+  const [questions, setQuestions] = useState<Question[]>([])
+
+  // 获取考试数据
+  const { data: exam, isLoading, error } = useQuery({
+    queryKey: ['exam', examId],
+    queryFn: () => getExam(examId),
+    enabled: !!examId,
+    staleTime: 2 * 60 * 1000, // 2分钟缓存
+  })
+
+  // 更新考试信息
+  const updateExamMutation = useMutation({
+    mutationFn: async (updatedExam: Partial<Exam>) => {
+      // TODO: 实现更新考试的API调用
+      console.log('更新考试数据:', updatedExam)
+      return updatedExam
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exam', examId] })
+      toast.success('考试信息已更新')
+    },
+    onError: () => {
+      toast.error('更新失败，请重试')
+    }
+  })
+
+  // 当考试数据加载完成时，初始化状态
   useEffect(() => {
-    // TODO: 根据examId获取exam数据
-    console.log('获取exam数据:', examId)
-  }, [examId])
+    if (exam) {
+      setQuestions(exam.questions || [])
+    }
+  }, [exam])
 
   const handleDeleteQuestion = (questionId: string) => {
     setQuestions(prev => prev.filter(q => q.id !== questionId))
   }
 
-  const handleAddQuestions = (newQuestions: any[]) => {
-    // 转换新题目格式并添加到列表
-    const convertedQuestions: Question[] = newQuestions.map((q, index) => ({
-      id: `new-${Date.now()}-${index}`,
-      subject: exam.goal.subject,
-      type: q.type || 'choice',
-      title: q.title,
-      options: q.options,
-      answer: q.answer || '',
-      creator_id: 'current-user',
-      created_at: new Date(),
-      updated_at: new Date()
-    }))
-    
-    setQuestions(prev => [...prev, ...convertedQuestions])
-  }
-
-  const handleQuestionSelected = (question: Question) => {
-    // 转换单个题目格式并添加到列表
-    const convertedQuestion: Question = {
-      id: `new-${Date.now()}`,
-      subject: exam.goal.subject,
-      type: question.type || QuestionType.choice,
-      title: question.title,
-      options: question.options,
-      answer: question.answer || '',
-      creator_id: 'current-user',
-      created_at: new Date(),
-      updated_at: new Date()
-    }
-    
-    setQuestions(prev => [...prev, convertedQuestion])
-  }
-
   const handleSave = () => {
+    if (!exam) return
+
     const updatedExam = {
       ...exam,
-      goal: {
-        ...exam.goal,
-        name: title
-      },
       questions: questions,
       question_ids: questions.map(q => q.id),
       updated_at: new Date().toISOString()
     }
-    
-    setExam(updatedExam)
-    // TODO: 调用API保存数据
-    console.log('保存exam数据:', updatedExam)
+
+    updateExamMutation.mutate(updatedExam)
   }
 
-  const getQuestionTypeLabel = (type: QuestionType) => {
-    const typeMap = {
-      [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
-      [QuestionType.judge]: '判断题'
-    }
-    return typeMap[type] || type
+  const formatDuration = (minutes: number) => {
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    return hours > 0 ? `${hours}小时${mins}分钟` : `${mins}分钟`
+  }
+
+  const formatDateTime = (dateString: string) => {
+    return new Date(dateString).toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">加载中...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600 mb-4">加载失败，请重试</p>
+          <Button onClick={() => window.location.reload()}>
+            重新加载
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!exam) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">考试不存在</p>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -156,29 +135,56 @@ export default function ExamEditPage() {
           </Button>
         </div>
 
-        {/* 考试标题编辑 */}
+        {/* 考试信息 */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>考试信息</CardTitle>
             <CardDescription>
-              编辑考试标题和题目内容
+              编辑考试标题和查看考试状态
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="title">考试标题</Label>
-                <Input
-                  id="title"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="输入考试标题"
-                  className="mt-1"
-                />
-              </div>
+              {/* 考试标题 */}
               <div className="flex items-center space-x-2">
-                <Label className="text-sm text-gray-500">科目：</Label>
-                <Badge variant="secondary">{exam.goal.subject}</Badge>
+                <Label className="text-sm text-gray-500 min-w-fit">考试标题：</Label>
+                <span className="text-sm font-medium">{exam.title}</span>
+              </div>
+
+              {/* 考试状态信息 */}
+              <div className="flex items-center space-x-6">
+                <div className="flex items-center space-x-2">
+                  <Label className="text-sm text-gray-500">状态：</Label>
+                  <Badge variant={exam.status === ExamStatus.COMPLETED ? "default" : "secondary"}>
+                    {exam.status === ExamStatus.COMPLETED ? '已完成' :
+                      exam.status === ExamStatus.PENDING ? '待开始' :
+                        exam.status === ExamStatus.PREPARING ? '准备中' : '失败'}
+                  </Badge>
+                </div>
+
+                {exam.status === ExamStatus.COMPLETED ? (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm text-gray-500">完成时间：</Label>
+                      <span className="text-sm">{exam.finished_at ? formatDateTime(exam.finished_at) : '-'}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm text-gray-500">实际用时：</Label>
+                      <span className="text-sm">{formatDuration(exam.actual_duration || 0)}</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm text-gray-500">计划开始时间：</Label>
+                      <span className="text-sm">{formatDateTime(exam.plan_starttime)}</span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Label className="text-sm text-gray-500">计划用时：</Label>
+                      <span className="text-sm">{formatDuration(exam.plan_duration)}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -197,39 +203,34 @@ export default function ExamEditPage() {
           </CardHeader>
           <CardContent>
             {questions.length > 0 ? (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {questions.map((question, index) => (
-                  <div key={question.id} className="flex items-start justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
+                  <div key={question.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-2">
                         <Badge variant="outline">第 {index + 1} 题</Badge>
-                        <Badge variant="secondary">{getQuestionTypeLabel(question.type)}</Badge>
+                        <Badge variant="secondary">{question.type}</Badge>
+                        {question.subject && (
+                          <Badge variant="secondary">{question.subject}</Badge>
+                        )}
                       </div>
-                      <p className="font-medium mb-2">{question.title}</p>
-                      {question.options && (
-                        <div className="text-sm text-gray-600">
-                          <p className="mb-1">选项：</p>
-                          <ul className="list-disc list-inside space-y-1">
-                            {question.options.map((option, optIndex) => (
-                              <li key={optIndex}>{option}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {question.answer && (
-                        <div className="mt-2">
-                          <p className="text-sm text-gray-500">答案：{question.answer}</p>
-                        </div>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteQuestion(question.id)}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteQuestion(question.id)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <QuestionShow
+                      question={question}
+                      onChange={(updatedQuestion) => {
+                        setQuestions(prev =>
+                          prev.map(q => q.id === question.id ? updatedQuestion : q)
+                        )
+                      }}
+                    />
                   </div>
                 ))}
               </div>
@@ -241,37 +242,18 @@ export default function ExamEditPage() {
           </CardContent>
         </Card>
 
-        {/* 添加题目 */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>添加题目</CardTitle>
-            <CardDescription>
-              通过AI生成或导入方式添加新题目
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex space-x-4">
-              <QuestionFromAI onQuestionSelected={handleQuestionSelected}>
-                <Button variant="outline">
-                  <Bot className="w-4 h-4 mr-2" />
-                  AI出题
-                </Button>
-              </QuestionFromAI>
-              <QuestionFromImport onQuestionSelected={handleQuestionSelected}>
-                <Button variant="outline">
-                  <Upload className="w-4 h-4 mr-2" />
-                  智能录入
-                </Button>
-              </QuestionFromImport>
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* 保存按钮 */}
         <div className="flex justify-end">
-          <Button onClick={handleSave} size="lg" className="px-8">
+          <Button
+            onClick={handleSave}
+            size="lg"
+            className="px-8"
+            disabled={updateExamMutation.isPending}
+          >
             <Save className="w-4 h-4 mr-2" />
-            保存考试
+            {updateExamMutation.isPending ? '保存中...' : '保存考试'}
           </Button>
         </div>
       </div>
