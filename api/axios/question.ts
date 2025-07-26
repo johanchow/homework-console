@@ -1,11 +1,28 @@
 import request from "./request";
 import { Question } from "@/entity/question";
+import { FilterParams } from "@/api/typing/question";
 
 export const batchCreateQuestions = async (
   data: Question[]
 ): Promise<{ questions: Pick<Question, "id">[] }> => {
   const response = await request.post(`/question/batch-create`, {
     questions: data,
+  });
+  return response.data;
+};
+
+export const listQuestions = async (
+  filters: FilterParams,
+  options: {
+    page: number;
+    page_size: number;
+  }
+): Promise<{ questions: Question[]; total: number }> => {
+  const response = await request.get(`/question/list`, {
+    params: {
+      ...filters,
+      ...options,
+    },
   });
   return response.data;
 };
