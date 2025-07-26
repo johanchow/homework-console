@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { Search, Edit, Trash2, Image, Video, Volume2, Plus } from 'lucide-react'
-import { Question, QuestionType, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
-import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { listQuestions } from '@/api/axios/question'
-import { toast } from 'sonner'
 import { FilterParams } from '@/api/typing/question'
+import { Question, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
+import { QuestionEditModal } from '@/feature/QuestionEditModal'
 
 export function QuestionClient() {
   const [questions, setQuestions] = useState<Question[]>([])
@@ -99,7 +99,7 @@ export function QuestionClient() {
             <h1 className="text-3xl font-bold text-gray-900">题目管理</h1>
             <p className="text-gray-600 mt-2">管理和组织您的题目库</p>
           </div>
-          <Button>
+          <Button onClick={() => window.open('/question/create', '_blank')}>
             <Plus className="w-4 h-4 mr-2" />
             创建题目
           </Button>

@@ -21,17 +21,16 @@ export const listQuestions = async (
     searchParams.append("page_size", options.page_size.toString());
 
   console.log("fetch listQuestions: ", params, options);
-  const response = await request(`/question/list?${searchParams.toString()}`, {
-    method: "GET",
-  });
+  const data = await request<{ questions: Question[]; total: number }>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/question/list?${searchParams.toString()}`,
+    {
+      method: "GET",
+    }
+  );
   console.log(
-    "fetch listQuestions response: ",
-    response.questions.map((question: Question) => question.id).join("+")
+    "fetch listQuestions data: ",
+    data.questions.map((question: Question) => question.id).join("+")
   );
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch questions");
-  }
-
-  return response.json();
+  return data;
 };

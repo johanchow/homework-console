@@ -63,6 +63,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
     enabled: !!goalId,
     staleTime: 2 * 60 * 1000, // 2分钟缓存
   })
+  console.log('goal exams len: ', examsData?.exams?.length);
 
   // 更新 Goal 的 mutation
   const updateGoalMutation = useMutation({
