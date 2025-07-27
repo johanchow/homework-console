@@ -7,6 +7,9 @@ WORKDIR /app
 # 安装 pnpm
 RUN npm install -g pnpm
 
+# 设置淘宝 pnpm 镜像源
+RUN pnpm config set registry https://registry.npmmirror.com
+
 # 复制 pnpm 锁文件和 package.json
 COPY package.json pnpm-lock.yaml ./
 
