@@ -50,7 +50,7 @@ export function GoalListClient() {
   const filteredGoals = useMemo(() => {
     if (!goalsData?.goals) return []
 
-    return goalsData.goals.filter(goal => {
+    return goalsData.goals.filter((goal: Goal) => {
       const matchesSubject = selectedSubject === '全部' || goal.subject === selectedSubject
       return matchesSubject
     })
@@ -156,7 +156,7 @@ export function GoalListClient() {
 
       {/* 目标卡片网格 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        {filteredGoals.map((goal) => (
+        {filteredGoals.map((goal: Goal) => (
           <Card key={goal.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => {
             router.push(`/goal/${goal.id}`)
           }}>

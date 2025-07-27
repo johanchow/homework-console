@@ -32,7 +32,7 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
     subject: '数学',
     type: QuestionType.choice,
     options: [],
-    answer: '',
+    material: '',
     images: [],
     videos: [],
     audios: []
@@ -46,7 +46,7 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
         subject: question.subject,
         type: question.type,
         options: question.options || [],
-        answer: question.answer || '',
+        material: question.material || '',
         images: question.images || [],
         videos: question.videos || [],
         audios: question.audios || [],
@@ -122,16 +122,17 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
     const updatedQuestion: Question = {
       id: formData.id || `question-${Date.now()}`,
       title: formData.title,
+      tip: '',
       subject: formData.subject || '数学',
       type: formData.type || QuestionType.choice,
       options: formData.type === QuestionType.choice ? formData.options : undefined,
-      answer: formData.answer,
+      material: formData.material,
       images: formData.images,
       videos: formData.videos,
       audios: formData.audios,
       creator_id: formData.creator_id || 'current-user',
-      created_at: formData.created_at || new Date(),
-      updated_at: new Date()
+      created_at: formData.created_at || '',
+      updated_at: formData.updated_at || ''
     }
 
     onSave(updatedQuestion)
@@ -149,7 +150,6 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
           subject: question.subject,
           type: question.type,
           options: question.options || [],
-          answer: question.answer || '',
           images: question.images || [],
           videos: question.videos || [],
           audios: question.audios || [],
@@ -167,7 +167,7 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
       [QuestionType.qa]: '问答题',
       [QuestionType.judge]: '判断题'
     }
-    return typeMap[type] || type
+    return typeMap[type as keyof typeof typeMap] || type
   }
 
   return (
@@ -278,7 +278,7 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
             ) : (
               <Input
                 id="answer"
-                value={formData.answer}
+                value={formData.material}
                 onChange={(e) => handleInputChange('answer', e.target.value)}
                 placeholder="输入答案"
               />

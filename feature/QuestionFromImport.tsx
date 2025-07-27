@@ -199,8 +199,8 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
         links: currentQuestion.links || [],
         material: currentQuestion.material || '',
         creator_id: currentQuestion.creator_id || '',
-        created_at: currentQuestion.created_at || new Date(),
-        updated_at: currentQuestion.updated_at || new Date()
+        created_at: currentQuestion.created_at || '',
+        updated_at: currentQuestion.updated_at || ''
       }
       onQuestionSelected(completeQuestion)
       setShowPreviewDialog(false)

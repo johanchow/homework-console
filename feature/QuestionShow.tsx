@@ -30,7 +30,7 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
     const updatedQuestion = {
       ...editingQuestion,
       material,
-      updated_at: new Date()
+      updated_at: ''
     }
     setEditingQuestion(updatedQuestion)
     onChange?.(updatedQuestion)

@@ -1,9 +1,9 @@
 import { GoalServer } from './GoalServer'
 
 interface GoalDetailPageProps {
-  params: {
+  params: Promise<{
     id: string
-  }
+  }>
 }
 
 export default async function GoalDetailPage({ params }: GoalDetailPageProps) {
