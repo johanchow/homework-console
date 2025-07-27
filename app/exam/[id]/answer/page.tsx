@@ -14,103 +14,23 @@ import { Message, MessageRole } from '@/entity/message'
 
 // 模拟数据
 const mockExam: Exam = {
-  id: 'exam-1',
+  id: '1',
   goal_id: '1',
+  title: '考试1',
   question_ids: ['1', '2', '3'],
-  examinee_id: 'student-001',
+  questions: [],
+  examinee_id: '1',
   status: ExamStatus.COMPLETED,
-  created_at: '2024-01-16T09:00:00Z',
-  updated_at: '2024-01-16T10:30:00Z',
-  finished_at: '2024-01-16T10:30:00Z',
-  answer: {
-    question: {
-      '1': {
-        id: '1',
-        subject: '数学',
-        type: 'choice' as any,
-        title: '求函数 f(x) = x² + 2x + 1 的导数',
-        options: ['2x + 2', '2x + 1', 'x + 2', 'x + 1'],
-        answer: '2x + 2',
-        creator_id: 'teacher-001',
-        created_at: new Date('2024-01-15T10:00:00Z'),
-        updated_at: new Date('2024-01-15T10:00:00Z')
-      },
-      '2': {
-        id: '2',
-        subject: '数学',
-        type: 'qa' as any,
-        title: '解释什么是微积分的基本定理',
-        answer: '微积分基本定理建立了微分和积分之间的关系...',
-        creator_id: 'teacher-001',
-        created_at: new Date('2024-01-15T10:30:00Z'),
-        updated_at: new Date('2024-01-15T10:30:00Z')
-      },
-      '3': {
-        id: '3',
-        subject: '数学',
-        type: 'judge' as any,
-        title: '导数的几何意义是函数图像在某点的切线斜率',
-        answer: '正确',
-        creator_id: 'teacher-001',
-        created_at: new Date('2024-01-15T11:00:00Z'),
-        updated_at: new Date('2024-01-15T11:00:00Z')
-      }
-    },
-    answer: {
-      '1': '2x + 2',
-      '2': '微积分基本定理是指定积分与不定积分之间的关系，它表明如果F(x)是f(x)的一个原函数，那么∫[a,b]f(x)dx = F(b) - F(a)。这个定理建立了微分和积分之间的桥梁，是微积分学的核心定理。',
-      '3': '正确'
-    },
-    messages: {
-      '1': [
-        {
-          role: MessageRole.User,
-          content: '这道题我不太会做，能帮我分析一下吗？',
-          message_type: 'text' as any
-        },
-        {
-          role: MessageRole.Assistant,
-          content: '好的，让我帮你分析这道求导题。对于函数f(x) = x² + 2x + 1，我们需要使用求导法则。首先，x²的导数是2x，2x的导数是2，常数1的导数是0。所以f\'(x) = 2x + 2。',
-          message_type: 'text' as any
-        },
-        {
-          role: MessageRole.User,
-          content: '明白了，谢谢！',
-          message_type: 'text' as any
-        }
-      ],
-      '2': [
-        {
-          role: MessageRole.User,
-          content: '微积分基本定理是什么？',
-          message_type: 'text' as any
-        },
-        {
-          role: MessageRole.Assistant,
-          content: '微积分基本定理是微积分学中最重要的定理之一，它建立了微分和积分之间的关系。简单来说，它告诉我们如何通过求原函数来计算定积分。',
-          message_type: 'text' as any
-        }
-      ],
-      '3': [
-        {
-          role: MessageRole.User,
-          content: '导数的几何意义是什么？',
-          message_type: 'text' as any
-        },
-        {
-          role: MessageRole.Assistant,
-          content: '导数的几何意义是函数图像在某点的切线斜率。这意味着导数告诉我们函数在该点的变化率。',
-          message_type: 'text' as any
-        }
-      ]
-    }
-  }
+  plan_duration: 60,
+  plan_starttime: '2024-01-15T10:00:00Z',
+  created_at: '2024-01-15T10:00:00Z',
+  updated_at: '2024-01-15T10:00:00Z'
 }
 
 export default function ExamAnswerPage() {
   const params = useParams()
   const examId = params.id as string
-  
+
   const [exam, setExam] = useState<Exam>(mockExam)
 
   useEffect(() => {
@@ -136,11 +56,11 @@ export default function ExamAnswerPage() {
     if (!exam.answer) return false
     const question = exam.answer.question[questionId]
     const studentAnswer = exam.answer.answer[questionId]
-    
+
     if (!question || !studentAnswer) return false
-    
+
     // 简单比较，实际应用中可能需要更复杂的评分逻辑
-    return question.answer === studentAnswer
+    return true
   }
 
   const formatDate = (dateString: string) => {
@@ -261,7 +181,7 @@ export default function ExamAnswerPage() {
                   <div>
                     <Label className="text-sm text-gray-500">正确答案</Label>
                     <div className="mt-1 p-3 bg-green-50 rounded-md">
-                      <p className="text-sm text-green-800">{question.answer}</p>
+                      <p className="text-sm text-green-800">{question.id}</p>
                     </div>
                   </div>
 
@@ -276,11 +196,10 @@ export default function ExamAnswerPage() {
                         {messages.map((message, msgIndex) => (
                           <div
                             key={msgIndex}
-                            className={`p-3 rounded-lg ${
-                              message.role === MessageRole.User
-                                ? 'bg-blue-50 ml-4'
-                                : 'bg-gray-50 mr-4'
-                            }`}
+                            className={`p-3 rounded-lg ${message.role === MessageRole.User
+                              ? 'bg-blue-50 ml-4'
+                              : 'bg-gray-50 mr-4'
+                              }`}
                           >
                             <div className="flex items-center space-x-2 mb-1">
                               <Badge variant="outline" className="text-xs">

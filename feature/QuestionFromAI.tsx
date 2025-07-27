@@ -235,7 +235,6 @@ export function QuestionFromAI({ onQuestionSelected, prompt: outPrompt, onPrompt
                     </div>
                     <QuestionShow
                       question={question}
-                      enableChange={editingQuestionIndex === index}
                       onChange={handleQuestionChange}
                     />
                   </div>
