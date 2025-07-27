@@ -50,6 +50,49 @@ build() {
     fi
 }
 
+# 从 tar 文件加载镜像
+load() {
+    print $BLUE "从 tar 文件加载镜像..."
+    
+    local tar_file="homework-console.tar"
+    
+    if [ ! -f "$tar_file" ]; then
+        print $RED "错误: 未找到 $tar_file"
+        exit 1
+    fi
+    
+    print $BLUE "正在加载镜像，请稍候..."
+    docker load < "$tar_file"
+    
+    if [ $? -eq 0 ]; then
+        print $GREEN "镜像加载成功: $IMAGE"
+    else
+        print $RED "镜像加载失败"
+        exit 1
+    fi
+}
+
+# 导出镜像到 tar 文件
+save() {
+    print $BLUE "导出镜像到 tar 文件..."
+    
+    # 检查镜像是否存在
+    if ! docker images | grep -q "$IMAGE"; then
+        print $RED "错误: 镜像 $IMAGE 不存在，请先构建镜像"
+        exit 1
+    fi
+    
+    docker save $IMAGE:latest > homework-console.tar
+    
+    if [ $? -eq 0 ]; then
+        print $GREEN "镜像导出成功: homework-console.tar"
+        print $BLUE "文件大小: $(du -h homework-console.tar | cut -f1)"
+    else
+        print $RED "镜像导出失败"
+        exit 1
+    fi
+}
+
 # 创建网络
 network() {
     if ! docker network ls | grep -q $NETWORK; then
@@ -178,6 +221,14 @@ deploy() {
     print $GREEN "部署完成!"
 }
 
+# 从 tar 文件部署 (加载 + 启动)
+deploy_from_tar() {
+    print $BLUE "从 tar 文件部署..."
+    load
+    start
+    print $GREEN "部署完成!"
+}
+
 # 帮助
 help() {
     echo "部署脚本 - homework-console"
@@ -185,23 +236,29 @@ help() {
     echo "用法: $0 [命令]"
     echo ""
     echo "命令:"
-    echo "  build     构建镜像"
-    echo "  start     启动容器"
-    echo "  stop      停止容器"
-    echo "  restart   重启容器"
-    echo "  status    查看状态"
-    echo "  logs      查看日志"
-    echo "  enter     进入容器"
-    echo "  remove    删除容器"
-    echo "  rmi       删除镜像"
-    echo "  cleanup   清理所有"
-    echo "  deploy    构建并启动"
-    echo "  help      显示帮助"
+echo "  build     构建镜像"
+echo "  save      导出镜像到 tar 文件"
+echo "  load      从 tar 文件加载镜像"
+echo "  start     启动容器"
+echo "  stop      停止容器"
+echo "  restart   重启容器"
+echo "  status    查看状态"
+echo "  logs      查看日志"
+echo "  enter     进入容器"
+echo "  remove    删除容器"
+echo "  rmi       删除镜像"
+echo "  cleanup   清理所有"
+echo "  deploy    构建并启动"
+echo "  deploy-tar 从 tar 文件部署"
+echo "  help      显示帮助"
     echo ""
     echo "示例:"
-    echo "  $0 deploy    # 构建并启动"
-    echo "  $0 logs      # 查看日志"
-    echo "  $0 stop      # 停止应用"
+echo "  $0 deploy      # 构建并启动"
+echo "  $0 deploy-tar  # 从 tar 文件部署"
+echo "  $0 save        # 导出镜像"
+echo "  $0 load        # 加载镜像"
+echo "  $0 logs        # 查看日志"
+echo "  $0 stop        # 停止应用"
 }
 
 # 主函数
@@ -211,6 +268,12 @@ main() {
     case "$1" in
         "build")
             build
+            ;;
+        "save")
+            save
+            ;;
+        "load")
+            load
             ;;
         "start")
             start
@@ -241,6 +304,9 @@ main() {
             ;;
         "deploy")
             deploy
+            ;;
+        "deploy-tar")
+            deploy_from_tar
             ;;
         "help"|"-h"|"--help"|"")
             help
