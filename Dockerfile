@@ -1,5 +1,5 @@
 # 构建阶段
-FROM node:22.16.0-slim AS builder
+FROM node:22.16.0-alpine AS builder
 
 WORKDIR /app
 
@@ -10,17 +10,23 @@ COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 COPY . .
+
+# 限制 Node 构建时最大内存占用
+ENV NODE_OPTIONS=--max_old_space_size=1536
 RUN pnpm build
 
 # 生产阶段
-FROM node:22.16.0-slim AS runner
+# 创建非 root 用户
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+FROM node:22.16.0-alpine AS runner
 
 WORKDIR /app
 
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/package.json ./
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder --chown=nextjs:nodejs /app/.next ./.next
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/package.json ./
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules ./node_modules
 
 ENV NODE_ENV=production
 ENV PORT=3000
