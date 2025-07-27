@@ -5,6 +5,7 @@
 ## 功能特性
 
 ### 用户认证系统
+
 - **双重登录方式**：
   - 账号密码登录
   - 手机号验证码登录
@@ -15,6 +16,7 @@
 - **状态管理**：使用自定义 Hook 管理用户认证状态
 
 ### 技术栈
+
 - **前端框架**：Next.js 15 (App Router)
 - **语言**：TypeScript
 - **样式**：Tailwind CSS 4
@@ -51,38 +53,106 @@
 ## 快速开始
 
 ### 安装依赖
+
 ```bash
 pnpm install
 ```
 
 ### 开发环境运行
+
 ```bash
 pnpm dev
 ```
 
 ### 构建生产版本
+
 ```bash
 pnpm build
+```
+
+## Docker 部署
+
+项目提供了便捷的部署脚本 `deploy.sh`，用于管理 Docker 容器。
+
+### 使用方法
+
+```bash
+# 给脚本添加执行权限
+chmod +x deploy.sh
+
+# 构建并启动应用
+./deploy.sh deploy
+
+# 查看应用状态
+./deploy.sh status
+
+# 查看应用日志
+./deploy.sh logs
+
+# 停止应用
+./deploy.sh stop
+
+# 重启应用
+./deploy.sh restart
+
+# 进入容器
+./deploy.sh enter
+
+# 清理所有资源
+./deploy.sh cleanup
+```
+
+### 可用命令
+
+| 命令      | 说明             |
+| --------- | ---------------- |
+| `build`   | 构建 Docker 镜像 |
+| `start`   | 启动容器         |
+| `stop`    | 停止容器         |
+| `restart` | 重启容器         |
+| `status`  | 查看容器状态     |
+| `logs`    | 查看容器日志     |
+| `enter`   | 进入容器         |
+| `remove`  | 删除容器         |
+| `rmi`     | 删除镜像         |
+| `cleanup` | 清理所有资源     |
+| `deploy`  | 构建并启动       |
+| `help`    | 显示帮助信息     |
+
+### 快速部署
+
+```bash
+# 一键部署（构建 + 启动）
+./deploy.sh deploy
+
+# 访问应用
+open http://localhost:3000
 ```
 
 ## 认证功能使用
 
 ### 登录页面
+
 访问 `/user/login` 可以看到登录页面，支持：
+
 - 账号密码登录
 - 手机号验证码登录
 - 表单验证和错误提示
 - 验证码发送倒计时
 
 ### 注册页面
+
 访问 `/user/register` 可以看到注册页面，支持：
+
 - 账号密码注册（包含邮箱、密码强度验证）
 - 手机号验证码注册
 - 用户协议同意
 - 表单验证和错误提示
 
 ### API 集成
+
 项目已配置好 API 调用结构，包括：
+
 - 统一的错误处理
 - 请求/响应拦截器
 - Token 自动管理
@@ -91,24 +161,32 @@ pnpm build
 ## 组件使用示例
 
 ### 表单组件
+
 ```tsx
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/component/form'
-import { Input } from '@/component/input'
-import { Button } from '@/component/button'
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/component/form";
+import { Input } from "@/component/input";
+import { Button } from "@/component/button";
 
 const schema = z.object({
-  username: z.string().min(1, '请输入用户名'),
-  password: z.string().min(6, '密码至少6位'),
-})
+  username: z.string().min(1, "请输入用户名"),
+  password: z.string().min(6, "密码至少6位"),
+});
 
 export function LoginForm() {
   const form = useForm({
     resolver: zodResolver(schema),
-    defaultValues: { username: '', password: '' }
-  })
+    defaultValues: { username: "", password: "" },
+  });
 
   return (
     <Form {...form}>
@@ -129,13 +207,14 @@ export function LoginForm() {
         <Button type="submit">登录</Button>
       </form>
     </Form>
-  )
+  );
 }
 ```
 
 ### 验证码输入组件
+
 ```tsx
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/component/opt-input'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/component/opt-input";
 
 <InputOTP
   value={code}
@@ -148,12 +227,13 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/component/opt-input'
       ))}
     </InputOTPGroup>
   )}
-/>
+/>;
 ```
 
 ## 环境变量配置
 
 创建 `.env.local` 文件：
+
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:3001/api
 ```
@@ -173,4 +253,4 @@ NEXT_PUBLIC_API_URL=http://localhost:3001/api
 - [ ] 添加权限控制
 - [ ] 集成文件上传
 - [ ] 添加实时通知
-- [ ] 实现多语言支持 
+- [ ] 实现多语言支持
