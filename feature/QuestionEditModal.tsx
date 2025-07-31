@@ -21,12 +21,18 @@ interface QuestionEditModalProps {
   question?: Question
   onSave: (question: Question) => void
   children: React.ReactNode
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
 }
 
 const subjects = ['数学', '英语', '计算机科学', '物理', '化学', '历史', '地理', '生物', '政治', '语文']
 
-export function QuestionEditModal({ question, onSave, children }: QuestionEditModalProps) {
-  const [isOpen, setIsOpen] = useState(false)
+export function QuestionEditModal({ question, onSave, children, open, onOpenChange }: QuestionEditModalProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+
+  // 使用外部控制的 open 状态，如果没有提供则使用内部状态
+  const isOpen = open !== undefined ? open : internalOpen
+  const setIsOpen = onOpenChange || setInternalOpen
   const [formData, setFormData] = useState<Partial<Question>>({
     title: '',
     subject: '数学',
@@ -172,9 +178,11 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      {open === undefined && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center">
@@ -226,6 +234,9 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
                 <SelectItem value={QuestionType.choice}>选择题</SelectItem>
                 <SelectItem value={QuestionType.qa}>问答题</SelectItem>
                 <SelectItem value={QuestionType.judge}>判断题</SelectItem>
+                <SelectItem value={QuestionType.reading}>阅读题</SelectItem>
+                <SelectItem value={QuestionType.summary}>总结题</SelectItem>
+                <SelectItem value={QuestionType.show}>表演题</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -264,9 +275,9 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
           )}
 
           {/* 答案 */}
-          <div className="space-y-2">
-            <Label htmlFor="answer">材料</Label>
-            {formData.type === QuestionType.qa ? (
+          {formData.type === QuestionType.reading &&
+            <div className="space-y-2">
+              <Label htmlFor="answer">材料</Label>
               <textarea
                 id="answer"
                 value={formData.material}
@@ -275,15 +286,8 @@ export function QuestionEditModal({ question, onSave, children }: QuestionEditMo
                 rows={4}
                 className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               />
-            ) : (
-              <Input
-                id="answer"
-                value={formData.material}
-                onChange={(e) => handleInputChange('answer', e.target.value)}
-                placeholder="输入答案"
-              />
-            )}
-          </div>
+            </div>
+          }
 
           {/* 媒体文件 */}
           <div className="space-y-4">

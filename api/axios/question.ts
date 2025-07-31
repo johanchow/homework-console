@@ -58,6 +58,24 @@ export const parseQuestionFromImages = async (params: {
   return response.data;
 };
 
+export const getQuestion = async (id: string): Promise<Question> => {
+  const response = await request.get(`/question/get`, {
+    params: { id },
+  });
+  return response.data;
+};
+
+export const updateQuestion = async (
+  id: string,
+  data: Partial<Question>
+): Promise<Question> => {
+  const response = await request.put(`/question/update`, {
+    id,
+    ...data,
+  });
+  return response.data;
+};
+
 export const analyzeQuestionMaterial = async (
   question: Question
 ): Promise<Question> => {
