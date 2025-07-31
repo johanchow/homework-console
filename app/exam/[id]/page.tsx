@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
-import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { ArrowLeft, Save, Trash2 } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, Edit, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -14,7 +13,9 @@ import { Exam, ExamStatus } from '@/entity/exam'
 import { Question, QuestionType } from '@/entity/question'
 
 import { QuestionShow } from '@/feature/QuestionShow'
+import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { getExam } from '@/api/axios/exam'
+import { updateQuestion } from '@/api/axios/question'
 import { toast } from 'sonner'
 
 export default function ExamEditPage() {
@@ -23,6 +24,11 @@ export default function ExamEditPage() {
   const queryClient = useQueryClient()
 
   const [questions, setQuestions] = useState<Question[]>([])
+  const [isEditingExam, setIsEditingExam] = useState(false)
+  const [examFormData, setExamFormData] = useState({
+    plan_starttime: '',
+    plan_duration: 0
+  })
 
   // 获取考试数据
   const { data: exam, isLoading, error } = useQuery({
@@ -59,17 +65,45 @@ export default function ExamEditPage() {
     setQuestions(prev => prev.filter(q => q.id !== questionId))
   }
 
-  const handleSave = () => {
+  const handleEditQuestion = async (updatedQuestion: Question) => {
+    await updateQuestion(updatedQuestion.id, updatedQuestion)
+    setQuestions(prev =>
+      prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
+    )
+    toast.success('题目已更新')
+  }
+
+  const handleEditExam = () => {
+    if (exam) {
+      // 将 ISO 日期时间转换为 datetime-local 格式
+      const dateTimeLocal = new Date(exam.plan_starttime).toISOString().slice(0, 16)
+      setExamFormData({
+        plan_starttime: dateTimeLocal,
+        plan_duration: exam.plan_duration
+      })
+      setIsEditingExam(true)
+    }
+  }
+
+  const handleSaveExam = () => {
     if (!exam) return
+
+    // 将 datetime-local 格式转换为 ISO 格式
+    const isoDateTime = new Date(examFormData.plan_starttime).toISOString()
 
     const updatedExam = {
       ...exam,
-      questions: questions,
-      question_ids: questions.map(q => q.id),
+      plan_starttime: isoDateTime,
+      plan_duration: examFormData.plan_duration,
       updated_at: new Date().toISOString()
     }
 
     updateExamMutation.mutate(updatedExam)
+    setIsEditingExam(false)
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditingExam(false)
   }
 
   const formatDuration = (minutes: number) => {
@@ -138,9 +172,22 @@ export default function ExamEditPage() {
         {/* 考试信息 */}
         <Card className="mb-8">
           <CardHeader>
-            <CardTitle>考试信息</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>考试信息</span>
+              {exam.status === ExamStatus.PENDING && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleEditExam}
+                  disabled={isEditingExam}
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  编辑
+                </Button>
+              )}
+            </CardTitle>
             <CardDescription>
-              编辑考试标题和查看考试状态
+              {exam.status === ExamStatus.PENDING ? '编辑考试信息（仅未开始状态可编辑）' : '查看考试信息'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,14 +222,58 @@ export default function ExamEditPage() {
                   </>
                 ) : (
                   <>
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-sm text-gray-500">计划开始时间：</Label>
-                      <span className="text-sm">{formatDateTime(exam.plan_starttime)}</span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Label className="text-sm text-gray-500">计划用时：</Label>
-                      <span className="text-sm">{formatDuration(exam.plan_duration)}</span>
-                    </div>
+                    {isEditingExam ? (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-sm text-gray-500">计划开始时间：</Label>
+                          <input
+                            type="datetime-local"
+                            value={examFormData.plan_starttime}
+                            onChange={(e) => setExamFormData(prev => ({ ...prev, plan_starttime: e.target.value }))}
+                            className="text-sm border border-gray-300 rounded px-2 py-1"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-sm text-gray-500">计划用时（分钟）：</Label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={examFormData.plan_duration}
+                            onChange={(e) => setExamFormData(prev => ({ ...prev, plan_duration: parseInt(e.target.value) || 0 }))}
+                            className="text-sm border border-gray-300 rounded px-2 py-1 w-20"
+                          />
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSaveExam}
+                            disabled={updateExamMutation.isPending}
+                          >
+                            <Save className="w-4 h-4 mr-1" />
+                            保存
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={handleCancelEdit}
+                          >
+                            取消
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-sm text-gray-500">计划开始时间：</Label>
+                          <span className="text-sm">{formatDateTime(exam.plan_starttime)}</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Label className="text-sm text-gray-500">计划用时：</Label>
+                          <span className="text-sm">{formatDuration(exam.plan_duration)}</span>
+                        </div>
+                      </>
+                    )}
                   </>
                 )}
               </div>
@@ -214,14 +305,30 @@ export default function ExamEditPage() {
                           <Badge variant="secondary">{question.subject}</Badge>
                         )}
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteQuestion(question.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center space-x-2">
+                        <QuestionEditModal
+                          question={question}
+                          onSave={handleEditQuestion}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            title="编辑题目"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        </QuestionEditModal>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDeleteQuestion(question.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          title="删除题目"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                     <QuestionShow
                       question={question}
@@ -241,21 +348,6 @@ export default function ExamEditPage() {
             )}
           </CardContent>
         </Card>
-
-
-
-        {/* 保存按钮 */}
-        <div className="flex justify-end">
-          <Button
-            onClick={handleSave}
-            size="lg"
-            className="px-8"
-            disabled={updateExamMutation.isPending}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {updateExamMutation.isPending ? '保存中...' : '保存考试'}
-          </Button>
-        </div>
       </div>
     </div>
   )

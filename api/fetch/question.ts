@@ -34,3 +34,37 @@ export const listQuestions = async (
 
   return data;
 };
+
+export const getQuestion = async (id: string): Promise<Question> => {
+  const query = new URLSearchParams({
+    id,
+  });
+  console.log("fetch getQuestion: ", id);
+  const data = await request<Question>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/question/get?${query.toString()}`,
+    {
+      method: "GET",
+    }
+  );
+  console.log("fetch getQuestion response: ", data);
+  return data;
+};
+
+export const updateQuestion = async (
+  id: string,
+  data: Partial<Question>
+): Promise<Question> => {
+  console.log("fetch updateQuestion: ", id, data);
+  const response = await request<Question>(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/question/update`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+        id,
+        ...data,
+      }),
+    }
+  );
+  console.log("fetch updateQuestion response: ", response);
+  return response;
+};

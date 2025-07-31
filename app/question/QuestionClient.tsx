@@ -2,19 +2,21 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
-import { Search, Edit, Trash2, Image, Video, Volume2, Plus } from 'lucide-react'
+import { Search, Edit, Trash2, Image, Video, Volume2, Plus, Eye } from 'lucide-react'
 import { listQuestions } from '@/api/axios/question'
 import { FilterParams } from '@/api/typing/question'
 import { Question, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 
 export function QuestionClient() {
+  const router = useRouter()
   const [questions, setQuestions] = useState<Question[]>([])
   const [total, setTotal] = useState(0)
   const [filters, setFilters] = useState<FilterParams>({})
@@ -47,6 +49,10 @@ export function QuestionClient() {
       prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
     )
     toast.success('题目已更新')
+  }
+
+  const handleViewQuestion = (questionId: string) => {
+    router.push(`/question/${questionId}`)
   }
 
   const handleFilterChange = (key: keyof FilterParams, value: string) => {
@@ -256,6 +262,15 @@ export function QuestionClient() {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewQuestion(question.id)}
+                              className="text-green-600 hover:text-green-700"
+                              title="查看详情"
+                            >
+                              <Eye className="w-4 h-4" />
+                            </Button>
                             <QuestionEditModal
                               question={question}
                               onSave={handleSaveQuestion}
@@ -264,6 +279,7 @@ export function QuestionClient() {
                                 variant="ghost"
                                 size="sm"
                                 className="text-blue-600 hover:text-blue-700"
+                                title="编辑题目"
                               >
                                 <Edit className="w-4 h-4" />
                               </Button>
@@ -273,6 +289,7 @@ export function QuestionClient() {
                               size="sm"
                               onClick={() => handleDeleteQuestion(question.id)}
                               className="text-red-600 hover:text-red-700"
+                              title="删除题目"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
