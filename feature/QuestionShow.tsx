@@ -119,6 +119,16 @@ export function QuestionShow({ question, onChange }: QuestionShowProps) {
         </div>
       )}
 
+      {editingQuestion.type === QuestionType.reading && (
+        <div className="space-y-2">
+          <div className="flex items-start space-x-2">
+            <div className="text-sm text-gray-600 font-medium min-w-fit">阅读材料：</div>
+            <div className="flex-1">
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 图片文件 */}
       {editingQuestion.images && editingQuestion.images.length > 0 && (
         <div className="space-y-2">

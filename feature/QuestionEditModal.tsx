@@ -14,8 +14,9 @@ import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
-import { Plus, X, Save, Edit } from 'lucide-react'
+import { Plus, X, Save, Edit, Upload, Image, Video, Music, FileText } from 'lucide-react'
 import { Question, QuestionType } from '@/entity/question'
+import { uploadFile } from '@/api/axios/cos'
 
 interface QuestionEditModalProps {
   question?: Question
@@ -43,6 +44,9 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
     videos: [],
     audios: []
   })
+
+  // 文件上传相关状态
+  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({})
 
   useEffect(() => {
     if (question) {
@@ -112,6 +116,46 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
       ...prev,
       [type]: mediaList
     }))
+  }
+
+  // 文件上传处理
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'images' | 'videos' | 'audios') => {
+    const files = Array.from(event.target.files || [])
+
+    for (const file of files) {
+      const fileId = `${type}-${Date.now()}-${Math.random()}`
+      setUploadingFiles(prev => ({ ...prev, [fileId]: true }))
+
+      try {
+        const result = await uploadFile(file)
+        if (result.success) {
+          setFormData(prev => ({
+            ...prev,
+            [type]: [...(prev[type] || []), result.url!]
+          }))
+        }
+      } catch (error) {
+        console.error('文件上传失败:', error)
+      } finally {
+        setUploadingFiles(prev => ({ ...prev, [fileId]: false }))
+      }
+    }
+
+    // 清空 input 值，允许重复上传同一文件
+    event.target.value = ''
+  }
+
+  const getFileIcon = (type: 'images' | 'videos' | 'audios') => {
+    switch (type) {
+      case 'images':
+        return <Image className="w-4 h-4 text-blue-500" />
+      case 'videos':
+        return <Video className="w-4 h-4 text-purple-500" />
+      case 'audios':
+        return <Music className="w-4 h-4 text-green-500" />
+      default:
+        return <FileText className="w-4 h-4 text-gray-500" />
+    }
   }
 
   const handleSave = () => {
@@ -279,9 +323,9 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             <div className="space-y-2">
               <Label htmlFor="answer">材料</Label>
               <textarea
-                id="answer"
+                id="material"
                 value={formData.material}
-                onChange={(e) => handleInputChange('answer', e.target.value)}
+                onChange={(e) => handleInputChange('material', e.target.value)}
                 placeholder="输入答案"
                 rows={4}
                 className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -296,145 +340,120 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             {/* 图片 */}
             <div className="space-y-2">
               <Label>图片文件</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="输入图片文件名"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      const target = e.target as HTMLInputElement
-                      handleMediaChange('images', target.value)
-                      target.value = ''
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                    handleMediaChange('images', input.value)
-                    input.value = ''
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* 已有图片预览 */}
+                {(formData.images || []).map((image, index) => (
+                  <div key={index} className="relative group">
+                    <img
+                      src={image}
+                      alt={`图片 ${index + 1}`}
+                      className="w-16 h-16 object-cover rounded-lg border"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMedia('images', index)}
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-500 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* 上传按钮 */}
+                <label htmlFor="image-upload" className="cursor-pointer">
+                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors">
+                    <Plus className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <input
+                    type="file"
+                    id="image-upload"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => handleFileUpload(e, 'images')}
+                    className="hidden"
+                  />
+                </label>
               </div>
-              {(formData.images || []).length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.images?.map((image, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                      <span>{image}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMedia('images', index)}
-                        className="h-auto p-0 text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* 视频 */}
             <div className="space-y-2">
               <Label>视频文件</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="输入视频文件名"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      const target = e.target as HTMLInputElement
-                      handleMediaChange('videos', target.value)
-                      target.value = ''
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                    handleMediaChange('videos', input.value)
-                    input.value = ''
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* 已有视频预览 */}
+                {(formData.videos || []).map((video, index) => (
+                  <div key={index} className="relative group">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
+                      <Video className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMedia('videos', index)}
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-500 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* 上传按钮 */}
+                <label htmlFor="video-upload" className="cursor-pointer">
+                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors">
+                    <Plus className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <input
+                    type="file"
+                    id="video-upload"
+                    accept="video/*"
+                    multiple
+                    onChange={(e) => handleFileUpload(e, 'videos')}
+                    className="hidden"
+                  />
+                </label>
               </div>
-              {(formData.videos || []).length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.videos?.map((video, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                      <span>{video}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMedia('videos', index)}
-                        className="h-auto p-0 text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
 
             {/* 音频 */}
             <div className="space-y-2">
               <Label>音频文件</Label>
-              <div className="flex items-center space-x-2">
-                <Input
-                  placeholder="输入音频文件名"
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      const target = e.target as HTMLInputElement
-                      handleMediaChange('audios', target.value)
-                      target.value = ''
-                    }
-                  }}
-                />
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={(e) => {
-                    const input = e.currentTarget.previousElementSibling as HTMLInputElement
-                    handleMediaChange('audios', input.value)
-                    input.value = ''
-                  }}
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
+              <div className="flex flex-wrap gap-2 items-center">
+                {/* 已有音频预览 */}
+                {(formData.audios || []).map((audio, index) => (
+                  <div key={index} className="relative group">
+                    <div className="w-16 h-16 bg-gray-100 rounded-lg border flex items-center justify-center">
+                      <Music className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeMedia('audios', index)}
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 bg-red-500 text-white hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+
+                {/* 上传按钮 */}
+                <label htmlFor="audio-upload" className="cursor-pointer">
+                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors">
+                    <Plus className="w-6 h-6 text-gray-400" />
+                  </div>
+                  <input
+                    type="file"
+                    id="audio-upload"
+                    accept="audio/*"
+                    multiple
+                    onChange={(e) => handleFileUpload(e, 'audios')}
+                    className="hidden"
+                  />
+                </label>
               </div>
-              {(formData.audios || []).length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {formData.audios?.map((audio, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center space-x-1">
-                      <span>{audio}</span>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeMedia('audios', index)}
-                        className="h-auto p-0 text-red-600 hover:text-red-700"
-                      >
-                        <X className="w-3 h-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>

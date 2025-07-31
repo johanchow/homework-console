@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   Target,
   Brain,
-  Bot,
+  Trophy,
   Eye,
   User,
   LogOut,
@@ -53,8 +53,8 @@ export const Header = () => {
 
   const navigation = [
     { name: '学习目标', href: '/goal', icon: Target },
+    { name: '挑战', href: '/exam', icon: Trophy },
     { name: '智能出题', href: '/question', icon: Brain },
-    { name: 'AI陪学', href: '/ai-tutor', icon: Bot },
     { name: '学习进度', href: '/progress', icon: Eye },
   ]
 
