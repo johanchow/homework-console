@@ -10,20 +10,24 @@ import { analyzeQuestionMaterial } from '@/api/axios/question'
 interface QuestionShowProps {
   question: Question
   onChange?: (question: Question) => void
+  isPreview?: boolean
 }
 
-export function QuestionShow({ question, onChange }: QuestionShowProps) {
+export function QuestionShow({ question, onChange, isPreview }: QuestionShowProps) {
   const [editingQuestion, setEditingQuestion] = useState<Question>(question)
   const [playingAudio, setPlayingAudio] = useState<string | null>(null)
   const [playingVideo, setPlayingVideo] = useState<string | null>(null)
 
   useEffect(() => {
-    analyzeQuestionMaterial(question).then((newQuestion) => {
-      setEditingQuestion({
-        ...question,
-        ...newQuestion,
+    // 预览模式，帮助解析材料内容
+    if (isPreview) {
+      analyzeQuestionMaterial(question).then((newQuestion) => {
+        setEditingQuestion({
+          ...question,
+          ...newQuestion,
+        })
       })
-    })
+    }
   }, [question])
 
   const handleAnswerChange = (material: string) => {

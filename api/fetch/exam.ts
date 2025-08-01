@@ -47,4 +47,18 @@ const getExam = async (id: string): Promise<Exam> => {
   return data;
 };
 
-export { listExams, getExam };
+const deleteExam = async (id: string): Promise<void> => {
+  const query = new URLSearchParams({
+    id,
+  });
+  console.log("fetch deleteExam: ", id);
+  await request(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/exam/delete?${query.toString()}`,
+    {
+      method: "DELETE",
+    }
+  );
+  console.log("fetch deleteExam response: success");
+};
+
+export { listExams, getExam, deleteExam };

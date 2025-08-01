@@ -1,27 +1,35 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { useUserStore } from '@/store/useUserStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { ArrowLeft, Save, Trash2, Edit, Calendar } from 'lucide-react'
-import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { ArrowLeft, Save, Trash2, Edit, Calendar, Plus, Download } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/component/tooltip'
+import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Exam, ExamStatus } from '@/entity/exam'
-import { Question, QuestionType } from '@/entity/question'
+import { Question } from '@/entity/question'
+import { batchCreateQuestions } from '@/api/axios/question'
 
 import { QuestionShow } from '@/feature/QuestionShow'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
-import { getExam } from '@/api/axios/exam'
+import { QuestionAdding } from '@/feature/QuestionAdding'
+import { QuestionImport } from '@/feature/QuestionImport'
+import { getExam, updateExam } from '@/api/axios/exam'
 import { updateQuestion } from '@/api/axios/question'
 import { toast } from 'sonner'
 
 export default function ExamEditPage() {
   const params = useParams()
   const examId = params.id as string
+  const router = useRouter()
   const queryClient = useQueryClient()
+  const { user } = useUserStore();
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [isEditingExam, setIsEditingExam] = useState(false)
@@ -29,6 +37,9 @@ export default function ExamEditPage() {
     plan_starttime: '',
     plan_duration: 0
   })
+  const [showQuestionAdding, setShowQuestionAdding] = useState(false)
+  const [showQuestionImport, setShowQuestionImport] = useState(false)
+  const [deletePopoverOpen, setDeletePopoverOpen] = useState<string | null>(null)
 
   // 获取考试数据
   const { data: exam, isLoading, error } = useQuery({
@@ -61,8 +72,12 @@ export default function ExamEditPage() {
     }
   }, [exam])
 
-  const handleDeleteQuestion = (questionId: string) => {
+  const handleDeleteQuestion = async (questionId: string) => {
+    await updateExam(examId, {
+      question_ids: exam?.question_ids?.filter(id => id !== questionId) || []
+    })
     setQuestions(prev => prev.filter(q => q.id !== questionId))
+    toast.success('题目已删除')
   }
 
   const handleEditQuestion = async (updatedQuestion: Question) => {
@@ -104,6 +119,30 @@ export default function ExamEditPage() {
 
   const handleCancelEdit = () => {
     setIsEditingExam(false)
+  }
+
+  const handleImportQuestions = async (questionIds: string[]) => {
+    const originalQuestionIds = exam?.question_ids || []
+    await updateExam(examId, {
+      question_ids: [...originalQuestionIds, ...questionIds]
+    })
+    toast.success(`已导入 ${questionIds.length} 道题目`)
+  }
+
+  const handleAddQuestions = async (addedQuestions: Question[]) => {
+    // 先发送创建题目请求
+    const newQuestions = addedQuestions.map(question => ({
+      ...question,
+      creator_id: user?.id,
+    }))
+    const { questions } = await batchCreateQuestions(newQuestions)
+    // 再更新考试题目
+    await updateExam(examId, {
+      question_ids: [...exam?.question_ids || [], ...questions.map(q => q.id)]
+    })
+    setQuestions(prev => [...prev, ...newQuestions])
+    setShowQuestionAdding(false)
+    toast.success(`已添加 ${newQuestions.length} 道新题目`)
   }
 
   const formatDuration = (minutes: number) => {
@@ -162,10 +201,10 @@ export default function ExamEditPage() {
         {/* 返回按钮 */}
         <div className="mb-6">
           <Button variant="ghost" asChild>
-            <Link href={`/goal/${exam.goal_id}`} className="flex items-center">
+            <div onClick={() => router.back()} className="flex items-center">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              返回目标详情
-            </Link>
+              返回
+            </div>
           </Button>
         </div>
 
@@ -286,10 +325,46 @@ export default function ExamEditPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>题目列表</span>
-              <Badge variant="secondary">{questions.length} 道题</Badge>
+              <div className="flex items-center space-x-4">
+                <Badge variant="secondary">{questions.length} 道题</Badge>
+                <div className="flex items-center space-x-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowQuestionImport(true)}
+                          className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                        >
+                          <Download className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>导入题目</p>
+                      </TooltipContent>
+                    </Tooltip>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setShowQuestionAdding(true)}
+                          className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          <Plus className="w-4 h-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>新建题目</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+              </div>
             </CardTitle>
             <CardDescription>
-              管理考试题目，支持删除和添加新题目
+              管理考试题目，支持导入已有题目和创建新题目
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -319,15 +394,47 @@ export default function ExamEditPage() {
                             <Edit className="w-4 h-4" />
                           </Button>
                         </QuestionEditModal>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteQuestion(question.id)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="删除题目"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <Popover open={deletePopoverOpen === question.id} onOpenChange={(open) => setDeletePopoverOpen(open ? question.id : null)}>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              title="删除题目"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80">
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <h4 className="font-medium leading-none">确认删除题目</h4>
+                                <p className="text-sm text-muted-foreground">
+                                  确定要删除第 {index + 1} 题 "{question.title}" 吗？此操作不可撤销。
+                                </p>
+                              </div>
+                              <div className="flex items-center justify-end space-x-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => setDeletePopoverOpen(null)}
+                                >
+                                  取消
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => {
+                                    handleDeleteQuestion(question.id)
+                                    setDeletePopoverOpen(null)
+                                  }}
+                                >
+                                  删除
+                                </Button>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
                     <QuestionShow
@@ -348,6 +455,44 @@ export default function ExamEditPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* 导入题目模态框 */}
+        <QuestionImport
+          open={showQuestionImport}
+          onOpenChange={setShowQuestionImport}
+          onImport={handleImportQuestions}
+          existingQuestionIds={questions.map(q => q.id)}
+        />
+
+        {/* 新建题目模态框 */}
+        {showQuestionAdding && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b">
+                <div>
+                  <h2 className="text-xl font-semibold">新建题目</h2>
+                  <p className="text-sm text-gray-600 mt-1">通过AI生成或导入方式创建新题目</p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowQuestionAdding(false)}
+                  className="hover:bg-gray-100"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="flex-1 overflow-auto p-6">
+                <QuestionAdding
+                  currentQuestions={[]}
+                  onQuestionsUpdated={(newQuestions) => {
+                    handleAddQuestions(newQuestions)
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

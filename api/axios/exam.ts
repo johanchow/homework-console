@@ -34,3 +34,14 @@ export const deleteExam = async (id: string): Promise<void> => {
   });
   return response.data;
 };
+
+export const updateExam = async (
+  id: string,
+  data: Partial<Exam>
+): Promise<Exam> => {
+  const response = await request.put(`/exam/update`, {
+    id,
+    ...data,
+  });
+  return response.data;
+};
