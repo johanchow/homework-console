@@ -402,6 +402,7 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
               <div className="border rounded-lg p-2 bg-gray-50 min-h-[200px]">
                 <QuestionShow
                   question={currentQuestion as Question}
+                  isPreview={true}
                   onChange={() => { }}
                 />
               </div>

@@ -9,7 +9,7 @@ export const setCookie = (
   } = {}
 ) => {
   if (typeof window === "undefined") return;
-  const { expires, path, domain, secure } = options;
+  const { expires, path = "/", domain, secure } = options;
   let cookieString = `${name}=${value}`;
   if (expires) {
     const date = new Date();
