@@ -1,11 +1,12 @@
 import { QuestionServer } from './QuestionServer'
 
 interface QuestionDetailPageProps {
-	params: {
-		id: string
-	}
+  params: Promise<{
+    id: string
+  }>
 }
 
-export default function QuestionDetailPage({ params }: QuestionDetailPageProps) {
-	return <QuestionServer params={params} />
+export default async function QuestionDetailPage({ params }: QuestionDetailPageProps) {
+  const { id } = await params
+  return <QuestionServer id={id} />
 }

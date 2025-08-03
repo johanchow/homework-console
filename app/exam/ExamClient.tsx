@@ -46,7 +46,7 @@ export function ExamClient() {
   useEffect(() => {
     if (data) {
       setExams(data.exams)
-      setTotal(data.count)
+      setTotal(data.total)
     }
   }, [data])
 
