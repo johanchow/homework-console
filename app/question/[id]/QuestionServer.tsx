@@ -4,23 +4,21 @@ import { HydrationBoundary } from '@tanstack/react-query'
 import { QuestionClient } from './QuestionClient'
 
 interface QuestionServerProps {
-  params: {
-    id: string
-  }
+  id: string
 }
 
-export async function QuestionServer({ params }: QuestionServerProps) {
+export async function QuestionServer({ id }: QuestionServerProps) {
   const queryClient = createServerQueryClient()
 
   // 预获取题目数据
   await queryClient.prefetch([{
-    queryKey: ['question', params.id],
-    queryFn: () => getQuestion(params.id),
+    queryKey: ['question', id],
+    queryFn: () => getQuestion(id),
   }])
 
   return (
     <HydrationBoundary state={queryClient.dehydratedState()}>
-      <QuestionClient questionId={params.id} />
+      <QuestionClient questionId={id} />
     </HydrationBoundary>
   )
 } 
