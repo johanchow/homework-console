@@ -1,30 +1,82 @@
 #!/bin/bash
 
-set -e
-
-# 镜像信息
+# === 配置参数 ===
 IMAGE_NAME="ghcr.io/johanchow/homework-console:latest"
-CONTAINER_NAME="homework-console"
+CONTAINER_NAME="homework-console-container"
+PORT=3000
 
-# 如果镜像是私有的，请先登录
-# echo "your_personal_access_token" | docker login ghcr.io -u johanchow --password-stdin
+# === 操作函数 ===
 
-echo "🚀 拉取最新镜像..."
-docker pull $IMAGE_NAME
+deploy() {
+  echo "🛠️ 拉取最新镜像: $IMAGE_NAME"
+  docker pull $IMAGE_NAME
 
-# 停止并删除旧容器（如果存在）
-if docker ps -a --format '{{.Names}}' | grep -Eq "^${CONTAINER_NAME}\$"; then
-  echo "🧹 停止并删除旧容器 $CONTAINER_NAME..."
+  echo "🛑 停止并移除旧容器（如有）: $CONTAINER_NAME"
+  docker stop $CONTAINER_NAME 2>/dev/null || true
+  docker rm $CONTAINER_NAME 2>/dev/null || true
+
+  echo "🚀 启动新容器: $CONTAINER_NAME"
+  docker run -d \
+    --name $CONTAINER_NAME \
+    -p $PORT:3000 \
+    --restart=unless-stopped \
+    $IMAGE_NAME
+}
+
+status() {
+  docker ps -a | grep $CONTAINER_NAME
+}
+
+logs() {
+  docker logs -f $CONTAINER_NAME
+}
+
+stop() {
+  echo "🛑 停止容器: $CONTAINER_NAME"
   docker stop $CONTAINER_NAME
-  docker rm $CONTAINER_NAME
-fi
+}
 
-# 启动新容器
-echo "🔄 启动新容器 $CONTAINER_NAME..."
-docker run -d \
-  --name $CONTAINER_NAME \
-  -p 3000:3000 \
-  --restart unless-stopped \
-  $IMAGE_NAME
+restart() {
+  echo "🔄 重启容器: $CONTAINER_NAME"
+  docker restart $CONTAINER_NAME
+}
 
-echo "✅ 部署完成！容器 $CONTAINER_NAME 正在运行。"
+enter() {
+  echo "🧭 进入容器: $CONTAINER_NAME"
+  docker exec -it $CONTAINER_NAME /bin/sh
+}
+
+cleanup() {
+  echo "🧹 清理容器与镜像资源"
+  docker stop $CONTAINER_NAME 2>/dev/null || true
+  docker rm $CONTAINER_NAME 2>/dev/null || true
+  docker rmi $IMAGE_NAME 2>/dev/null || true
+}
+
+# === 主控制 ===
+case "$1" in
+  deploy)
+    deploy
+    ;;
+  status)
+    status
+    ;;
+  logs)
+    logs
+    ;;
+  stop)
+    stop
+    ;;
+  restart)
+    restart
+    ;;
+  enter)
+    enter
+    ;;
+  cleanup)
+    cleanup
+    ;;
+  *)
+    echo "Usage: $0 {deploy|status|logs|stop|restart|enter|cleanup}"
+    ;;
+esac
