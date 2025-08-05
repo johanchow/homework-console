@@ -5,6 +5,9 @@ IMAGE_NAME="ghcr.io/johanchow/homework-console:latest"
 CONTAINER_NAME="homework-console-container"
 PORT=3000
 
+# 合并 env 文件
+cat .env .env.$NODE_ENV > .env.merged
+
 # === 操作函数 ===
 
 deploy() {
@@ -18,6 +21,7 @@ deploy() {
   echo "🚀 启动新容器: $CONTAINER_NAME"
   docker run -d \
     --name $CONTAINER_NAME \
+    --env-file .env.merged \
     -p $PORT:3000 \
     --restart=unless-stopped \
     $IMAGE_NAME
