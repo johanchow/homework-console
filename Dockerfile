@@ -3,6 +3,10 @@ FROM --platform=linux/amd64 node:22.16.0-alpine AS builder
 
 WORKDIR /app
 
+# 👇 接收构建参数: 如果docker build时没有传入参数，则使用默认参数test
+ARG NODE_ENV=test # 构建时使用
+ENV NODE_ENV=$NODE_ENV # 运行时使用
+
 RUN npm install -g pnpm
 
 COPY package.json pnpm-lock.yaml ./
@@ -21,7 +25,6 @@ WORKDIR /app
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 
-ENV NODE_ENV=production
 EXPOSE 3000
 
 USER node
