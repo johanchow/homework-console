@@ -11,7 +11,7 @@ jobs:
 
     permissions:
       contents: read
-      packages: write # 允许推送到 GitHub Container Registry
+      packages: write
 
     steps:
       - name: Checkout code
@@ -34,7 +34,6 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64
-          # 传参到Dockerfile
           build-args: NODE_ENV=test
           tags: |
             ghcr.io/johanchow/homework-console:latest
