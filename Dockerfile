@@ -5,7 +5,7 @@ WORKDIR /app
 
 # 👇 接收构建参数: 如果docker build时没有传入参数，则使用默认参数test
 ARG NODE_ENV=test # 构建时使用
-ENV NODE_ENV=$NODE_ENV # 运行时使用
+ENV NODE_ENV=${NODE_ENV}
 
 RUN npm install -g pnpm
 
