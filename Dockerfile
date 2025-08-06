@@ -15,6 +15,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # 限制 Node 构建时最大内存占用
+RUN echo "NODE_ENV: ${NODE_ENV}"
 RUN pnpm build
 
 FROM node:22.16.0-alpine AS runner
