@@ -35,8 +35,7 @@ jobs:
           push: true
           platforms: linux/amd64
           # 传参到Dockerfile
-          build-args: |
-            NODE_ENV=test
+          build-args: NODE_ENV=test
           tags: |
             ghcr.io/johanchow/homework-console:latest
             ghcr.io/johanchow/homework-console:${{ github.sha }}
