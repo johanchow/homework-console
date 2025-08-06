@@ -3,7 +3,7 @@ name: Build and Push Next.js Docker Image to GHCR
 on:
   push:
     branches:
-      - main # 根据你的主分支设置，可能是 master
+      - main
 
 jobs:
   build:
@@ -34,6 +34,8 @@ jobs:
           file: ./Dockerfile
           push: true
           platforms: linux/amd64
+          build-args: | # 传参到Dockerfile
+            NODE_ENV=test
           tags: |
             ghcr.io/johanchow/homework-console:latest
             ghcr.io/johanchow/homework-console:${{ github.sha }}
