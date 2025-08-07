@@ -3,7 +3,7 @@ name: Build and Push Next.js Docker Image to GHCR
 on:
   push:
     branches:
-      - main
+      - test
 
 jobs:
   build:
@@ -33,7 +33,7 @@ jobs:
           echo "${{ secrets.ENV_TEST }}" > .env.test
           echo "${{ secrets.ENV_PROD }}" > .env.prod
 
-      - name: Build and push Docker image (Production)
+      - name: Build and push Docker image (Test)
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -41,7 +41,7 @@ jobs:
           push: true
           platforms: linux/amd64
           # 传参到Dockerfile
-          build-args: NODE_ENV=production
+          build-args: NODE_ENV=test
           tags: |
-            ghcr.io/johanchow/homework-console:latest
-            ghcr.io/johanchow/homework-console:${{ github.sha }}
+            ghcr.io/johanchow/homework-console:test
+            ghcr.io/johanchow/homework-console:test-${{ github.sha }}
