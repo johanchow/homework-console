@@ -1,9 +1,14 @@
 #!/bin/bash
 
 # === 配置参数 ===
-IMAGE_NAME="ghcr.io/johanchow/homework-console:latest"
 CONTAINER_NAME="homework-console-container"
 PORT=3000
+# 如果NODE_ENV是test|prod，则使用test|latest镜像
+if [ "$NODE_ENV" = "prod" ]; then
+  IMAGE_NAME="ghcr.io/johanchow/homework-console:latest"
+else
+  IMAGE_NAME="ghcr.io/johanchow/homework-console:test"
+fi
 
 # 合并 env 文件
 cat .env .env.$NODE_ENV > .env.merged
