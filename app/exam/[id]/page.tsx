@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
+import { toast } from 'sonner'
 import { useUserStore } from '@/store/useUserStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
@@ -22,7 +23,7 @@ import { QuestionAdding } from '@/feature/QuestionAdding'
 import { QuestionImport } from '@/feature/QuestionImport'
 import { getExam, updateExam } from '@/api/axios/exam'
 import { updateQuestion } from '@/api/axios/question'
-import { toast } from 'sonner'
+import { toLocalDateTimeString } from '@/util/formatter'
 
 export default function ExamEditPage() {
   const params = useParams()
@@ -52,9 +53,8 @@ export default function ExamEditPage() {
   // 更新考试信息
   const updateExamMutation = useMutation({
     mutationFn: async (updatedExam: Partial<Exam>) => {
-      // TODO: 实现更新考试的API调用
       console.log('更新考试数据:', updatedExam)
-      return updatedExam
+      await updateExam(examId, updatedExam)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exam', examId] })
@@ -90,10 +90,8 @@ export default function ExamEditPage() {
 
   const handleEditExam = () => {
     if (exam) {
-      // 将 ISO 日期时间转换为 datetime-local 格式
-      const dateTimeLocal = new Date(exam.plan_starttime).toISOString().slice(0, 16)
       setExamFormData({
-        plan_starttime: dateTimeLocal,
+        plan_starttime: toLocalDateTimeString(new Date(exam.plan_starttime)),
         plan_duration: exam.plan_duration
       })
       setIsEditingExam(true)
