@@ -14,8 +14,11 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-# 限制 Node 构建时最大内存占用
-RUN echo "NODE_ENV: ${NODE_ENV}"
+# 查看是否有.env.${NODE_ENV}文件
+RUN echo "Next.js will automatically load .env.${NODE_ENV}"
+RUN if [ -f ".env" ]; then echo "Found .env"; else echo "No .env file found"; fi
+RUN if [ -f ".env.${NODE_ENV}" ]; then echo "Found .env.${NODE_ENV}"; else echo "No .env.${NODE_ENV} file found"; fi
+
 RUN pnpm build
 
 FROM node:22.16.0-alpine AS runner
