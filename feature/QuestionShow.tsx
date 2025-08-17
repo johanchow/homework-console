@@ -22,23 +22,15 @@ export function QuestionShow({ question, onChange, isPreview }: QuestionShowProp
     // 预览模式，帮助解析材料内容
     if (isPreview) {
       analyzeQuestionMaterial(question).then((newQuestion) => {
-        setEditingQuestion({
+        onChange?.({
           ...question,
           ...newQuestion,
         })
       })
+    } else {
+      setEditingQuestion(question)
     }
   }, [question])
-
-  const handleAnswerChange = (material: string) => {
-    const updatedQuestion = {
-      ...editingQuestion,
-      material,
-      updated_at: ''
-    }
-    setEditingQuestion(updatedQuestion)
-    onChange?.(updatedQuestion)
-  }
 
   const handleAudioPlay = (url: string) => {
     if (playingAudio === url) {
@@ -265,13 +257,17 @@ export function QuestionShow({ question, onChange, isPreview }: QuestionShowProp
           <div className="flex items-start space-x-2">
             <div className="text-sm font-medium text-gray-700 min-w-fit">材料：</div>
             <div className="flex-1">
-              <textarea
-                value={editingQuestion.material || ''}
-                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleAnswerChange(e.target.value)}
-                placeholder="AI自动填入材料"
-                rows={3}
-                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
+              {!isPreview ? (
+                <div className="flex-1" dangerouslySetInnerHTML={{ __html: editingQuestion.material }} />
+              ) : (
+                <textarea
+                  value={editingQuestion.material || ''}
+                  placeholder="AI自动填入材料"
+                  rows={3}
+                  onChange={(e) => setEditingQuestion({ ...editingQuestion, material: e.target.value })}
+                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                />
+              )}
             </div>
           </div>
         </div>
