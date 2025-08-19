@@ -65,27 +65,52 @@ export default function ExamEditPage() {
     }
   })
 
+  // 更新题目
+  const updateQuestionMutation = useMutation({
+    mutationFn: async (updatedQuestion: Partial<Question>) => {
+      if (!updatedQuestion.id) {
+        throw new Error('题目ID不能为空')
+      }
+      await updateQuestion(updatedQuestion.id, updatedQuestion)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['exam', examId] })
+      toast.success('题目已更新')
+    },
+    onError: () => {
+      toast.error('更新失败，请重试')
+    }
+  })
+
+  const batchCreateQuestionsMutation = useMutation({
+    mutationFn: async (questions: Question[]) => {
+      const { questions: newQuestions } = await batchCreateQuestions(questions)
+      return newQuestions
+    },
+    onError: () => {
+      toast.error('创建失败，请重试')
+    }
+  })
+
   // 当考试数据加载完成时，初始化状态
   useEffect(() => {
+    console.log('exam change: ', exam);
     if (exam) {
       setQuestions(exam.questions || [])
     }
   }, [exam])
 
   const handleDeleteQuestion = async (questionId: string) => {
-    await updateExam(examId, {
+    await updateExamMutation.mutateAsync({
       question_ids: exam?.question_ids?.filter(id => id !== questionId) || []
-    })
+    });
+
     setQuestions(prev => prev.filter(q => q.id !== questionId))
     toast.success('题目已删除')
   }
 
   const handleEditQuestion = async (updatedQuestion: Question) => {
-    await updateQuestion(updatedQuestion.id, updatedQuestion)
-    setQuestions(prev =>
-      prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
-    )
-    toast.success('题目已更新')
+    updateQuestionMutation.mutate(updatedQuestion)
   }
 
   const handleEditExam = () => {
@@ -121,7 +146,7 @@ export default function ExamEditPage() {
 
   const handleImportQuestions = async (questionIds: string[]) => {
     const originalQuestionIds = exam?.question_ids || []
-    await updateExam(examId, {
+    await updateExamMutation.mutateAsync({
       question_ids: [...originalQuestionIds, ...questionIds]
     })
     toast.success(`已导入 ${questionIds.length} 道题目`)
@@ -129,16 +154,15 @@ export default function ExamEditPage() {
 
   const handleAddQuestions = async (addedQuestions: Question[]) => {
     // 先发送创建题目请求
-    const newQuestions = addedQuestions.map(question => ({
+    const addedQuestions2 = addedQuestions.map(question => ({
       ...question,
       creator_id: user?.id,
     }))
-    const { questions } = await batchCreateQuestions(newQuestions)
+    const newQuestions = await batchCreateQuestionsMutation.mutateAsync(addedQuestions2)
     // 再更新考试题目
-    await updateExam(examId, {
-      question_ids: [...exam?.question_ids || [], ...questions.map(q => q.id)]
+    await updateExamMutation.mutateAsync({
+      question_ids: [...exam?.question_ids || [], ...newQuestions.map(q => q.id)]
     })
-    setQuestions(prev => [...prev, ...newQuestions])
     setShowQuestionAdding(false)
     toast.success(`已添加 ${newQuestions.length} 道新题目`)
   }
@@ -466,20 +490,6 @@ export default function ExamEditPage() {
         {showQuestionAdding && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="flex items-center justify-between p-6 border-b">
-                <div>
-                  <h2 className="text-xl font-semibold">新建题目</h2>
-                  <p className="text-sm text-gray-600 mt-1">通过AI生成或导入方式创建新题目</p>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowQuestionAdding(false)}
-                  className="hover:bg-gray-100"
-                >
-                  ✕
-                </Button>
-              </div>
               <div className="flex-1 overflow-auto p-6">
                 <QuestionAdding
                   currentQuestions={[]}

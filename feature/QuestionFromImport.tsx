@@ -403,7 +403,7 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
                 <QuestionShow
                   question={currentQuestion as Question}
                   isPreview={true}
-                  onChange={() => { }}
+                  onChange={(question) => setCurrentQuestion(question)}
                 />
               </div>
             )}

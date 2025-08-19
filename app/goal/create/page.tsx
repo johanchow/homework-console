@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
+import { Badge } from '@/component/badge'
+import { Trash2 } from 'lucide-react'
 import { ArrowLeft, ArrowRight, Users } from 'lucide-react'
 import Link from 'next/link'
 import { QuestionAdding } from '@/feature/QuestionAdding'
 import { useUserStore } from '@/store/useUserStore'
-import { Exam, Goal, Question, ExamStatus } from '@/entity'
+import { Goal, Question, ExamStatus, questionTypeIcon, questionTypeLabel } from '@/entity'
 import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
 import { Duration } from '@/component/duration'
 import Calendar from '@/component/calendar'
@@ -95,6 +97,15 @@ export default function CreateGoalPage() {
     alert('创建成功');
   }
 
+  const handleDeleteQuestion = (questionId: string) => {
+    const updatedQuestions = formData.questions.filter(q => q.id !== questionId)
+    setFormData({
+      ...formData,
+      questions: updatedQuestions
+    });
+  }
+
+
   const renderStep1 = () => (
     <Card>
       <CardHeader>
@@ -138,6 +149,61 @@ export default function CreateGoalPage() {
 
   const renderStep2 = () => (
     <div className="space-y-6">
+      {/* 已出题目列表 */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center">
+            <span className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold mr-3">
+              2
+            </span>
+            题目管理
+          </CardTitle>
+          <CardDescription>
+            为您的学习目标添加练习题，可以通过AI出题或智能录入的方式
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* 题目统计 */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <span className="text-sm text-gray-600">已添加题目：</span>
+              <span className="text-lg font-semibold text-blue-600">{formData.questions.length}</span>
+            </div>
+          </div>
+
+          {/* 题目列表 */}
+          <div className="space-y-3">
+            {formData.questions.map((question) => (
+              <div key={question.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+                <div className="flex-1 flex items-center space-x-3">
+                  {/* 题目类型图标 */}
+                  <span className="text-xl">{questionTypeIcon[question.type]}</span>
+
+                  {/* 题目信息 - 一行展示 */}
+                  <div className="flex items-center space-x-2 flex-1 min-w-0">
+                    <span className="text-sm text-gray-500 font-medium">{question.subject}</span>
+                    <span className="text-gray-300">•</span>
+                    <Badge variant="outline" className="text-xs">{questionTypeLabel[question.type]}</Badge>
+                    <span className="text-gray-300">•</span>
+                    <span className="font-medium text-gray-900 truncate">{question.title}</span>
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-600 hover:text-red-700 ml-3 flex-shrink-0"
+                  onClick={() => handleDeleteQuestion(question.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+
       {/* 使用QuestionAdding组件 */}
       <QuestionAdding
         onPromptUpdated={(prompt) => handleInputChange('ai_prompt', prompt)}

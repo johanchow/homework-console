@@ -13,7 +13,7 @@ import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-rea
 import { useRouter } from 'next/navigation'
 import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
-import { getGoal } from '@/api/axios/goal'
+import { getGoal, updateGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
 import { toast } from 'sonner'
@@ -68,9 +68,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 更新 Goal 的 mutation
   const updateGoalMutation = useMutation({
     mutationFn: async (data: { name: string; status: GoalStatus }) => {
-      // TODO: 实现更新 Goal 的 API
-      console.log('更新 Goal:', data)
-      return Promise.resolve()
+      return updateGoal(goalId, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goal', goalId] })
