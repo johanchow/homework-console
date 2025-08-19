@@ -101,9 +101,10 @@ export default function ExamEditPage() {
   }, [exam])
 
   const handleDeleteQuestion = async (questionId: string) => {
-    await updateExam(examId, {
+    await updateExamMutation.mutateAsync({
       question_ids: exam?.question_ids?.filter(id => id !== questionId) || []
-    })
+    });
+
     setQuestions(prev => prev.filter(q => q.id !== questionId))
     toast.success('题目已删除')
   }
@@ -145,7 +146,7 @@ export default function ExamEditPage() {
 
   const handleImportQuestions = async (questionIds: string[]) => {
     const originalQuestionIds = exam?.question_ids || []
-    await updateExam(examId, {
+    await updateExamMutation.mutateAsync({
       question_ids: [...originalQuestionIds, ...questionIds]
     })
     toast.success(`已导入 ${questionIds.length} 道题目`)
@@ -159,7 +160,7 @@ export default function ExamEditPage() {
     }))
     const newQuestions = await batchCreateQuestionsMutation.mutateAsync(addedQuestions2)
     // 再更新考试题目
-    await updateExam(examId, {
+    await updateExamMutation.mutateAsync({
       question_ids: [...exam?.question_ids || [], ...newQuestions.map(q => q.id)]
     })
     setShowQuestionAdding(false)
