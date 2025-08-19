@@ -5,11 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
+import { Badge } from '@/component/badge'
+import { Trash2 } from 'lucide-react'
 import { ArrowLeft, ArrowRight, Users } from 'lucide-react'
 import Link from 'next/link'
 import { QuestionAdding } from '@/feature/QuestionAdding'
 import { useUserStore } from '@/store/useUserStore'
-import { Exam, Goal, Question, ExamStatus } from '@/entity'
+import { Goal, Question, ExamStatus, questionTypeIcon, questionTypeLabel } from '@/entity'
 import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
 import { Duration } from '@/component/duration'
 import Calendar from '@/component/calendar'
@@ -95,6 +97,15 @@ export default function CreateGoalPage() {
     alert('创建成功');
   }
 
+  const handleDeleteQuestion = (questionId: string) => {
+    const updatedQuestions = formData.questions.filter(q => q.id !== questionId)
+    setFormData({
+      ...formData,
+      questions: updatedQuestions
+    });
+  }
+
+
   const renderStep1 = () => (
     <Card>
       <CardHeader>
@@ -156,13 +167,13 @@ export default function CreateGoalPage() {
             {/* 题目统计 */}
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <span className="text-sm text-gray-600">已添加题目：</span>
-              <span className="text-lg font-semibold text-blue-600">{questions.length}</span>
+              <span className="text-lg font-semibold text-blue-600">{formData.questions.length}</span>
             </div>
           </div>
 
           {/* 题目列表 */}
           <div className="space-y-3">
-            {questions.map((question) => (
+            {formData.questions.map((question) => (
               <div key={question.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
                 <div className="flex-1 flex items-center space-x-3">
                   {/* 题目类型图标 */}

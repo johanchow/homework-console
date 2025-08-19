@@ -30,12 +30,6 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
     onQuestionsUpdated(updatedQuestions)
   }
 
-  const handleDeleteQuestion = (questionId: string) => {
-    const updatedQuestions = questions.filter(q => q.id !== questionId)
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
-  }
-
   return (
     <div className="space-y-6">
       {/* 添加题目 - Tab形式 */}

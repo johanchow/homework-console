@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Button } from '@/component/button'
 import { Badge } from '@/component/badge'
 import { X, Image as ImageIcon, Video, Volume2, Play, Pause, FileText, Link as LinkIcon } from 'lucide-react'
