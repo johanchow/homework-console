@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
 import { QuestionFromImport } from './QuestionFromImport'
+import { QuestionFromBatch } from './QuestionFromBatch'
 import { Question } from '@/entity/question'
 
 interface QuestionAddingProps {
@@ -30,6 +31,12 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
     onQuestionsUpdated(updatedQuestions)
   }
 
+  const handleBatchQuestionSelected = (batchQuestions: Question[]) => {
+    const updatedQuestions = [...questions, ...batchQuestions]
+    setQuestions(updatedQuestions)
+    onQuestionsUpdated(updatedQuestions)
+  }
+
   return (
     <div className="space-y-6">
       {/* 添加题目 - Tab形式 */}
@@ -42,13 +49,17 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="import" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="import" className="flex items-center">
-                <Upload className="w-4 h-4 mr-2" />
+                <Upload className="w-3 h-4 mr-1" />
                 智能录入
               </TabsTrigger>
+              <TabsTrigger value="batch" className="flex items-center">
+                <Upload className="w-3 h-4 mr-1" />
+                批量导入
+              </TabsTrigger>
               <TabsTrigger value="ai" className="flex items-center">
-                <Bot className="w-4 h-4 mr-2" />
+                <Bot className="w-3 h-3 mr-1" />
                 AI出题
               </TabsTrigger>
             </TabsList>
@@ -59,6 +70,12 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
                 onQuestionSelected={handleAIQuestionSelected}
                 prompt={prompt}
                 onPromptUpdated={onPromptUpdated}
+              />
+            </TabsContent>
+
+            <TabsContent value="batch" className="space-y-6">
+              <QuestionFromBatch
+                onQuestionSelected={handleBatchQuestionSelected}
               />
             </TabsContent>
 

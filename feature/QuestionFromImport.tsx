@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form'
 import { Button } from '@/component/button'
 import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
 import { Question, QuestionType, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
-import { uploadFile } from '@/api/axios/cos'
 import { Input } from '@/component/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { QuestionShow } from './QuestionShow'
@@ -13,19 +12,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { UrlLink } from '@/component/url-link'
 import { Label } from '@/component/label'
 import { newUuid } from '@/util'
+import { UploadedFile, handleFileUploadEvent, updateQuestionWithFile, removeFileFromQuestion, getFileType } from '@/util/file'
 
 interface QuestionFromImportProps {
   onQuestionSelected: (question: Question) => void
 }
 
-interface UploadedFile {
-  file: File
-  preview: string
-  url?: string
-  isUploading: boolean
-  uploadSuccess: boolean
-  uploadError?: string
-}
+
 
 interface FormData {
   title: string
@@ -59,84 +52,37 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   const watchedSubject = watch('subject')
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(event.target.files || [])
+    await handleFileUploadEvent(
+      event,
+      (file: UploadedFile, index: number) => {
+        setUploadedFiles(prev => [...prev, file])
+      },
+      (index: number, result) => {
+        setUploadedFiles(prev => prev.map((f, i) => {
+          if (i === index) {
+            return {
+              ...f,
+              isUploading: false,
+              uploadSuccess: result.success,
+              url: result.success ? result.url : undefined,
+              uploadError: result.success ? undefined : result.error
+            }
+          }
+          return f
+        }))
 
-    files.forEach(async (file) => {
-      // 生成预览
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const preview = e.target?.result as string
-
-        // 添加到列表，标记为上传中
-        const newFile: UploadedFile = {
-          file,
-          preview,
-          isUploading: true,
-          uploadSuccess: false
-        }
-
-        setUploadedFiles(prev => {
-          const newList = [...prev, newFile]
-          // 立即开始上传
-          handleUploadSingleFile(newFile, newList.length - 1)
-          return newList
-        })
-      }
-      reader.readAsDataURL(file)
-    })
-  }
-
-  const handleUploadSingleFile = async (file: UploadedFile, index: number) => {
-    try {
-      const result = await uploadFile(file.file)
-
-      setUploadedFiles(prev => prev.map((f, i) => {
-        if (i === index) {
-          return {
-            ...f,
-            isUploading: false,
-            uploadSuccess: result.success,
-            url: result.success ? result.url : undefined,
-            uploadError: result.success ? undefined : '上传失败'
+        // 如果上传成功，更新 currentQuestion
+        if (result.success && result.url) {
+          const file = uploadedFiles[index]?.file
+          if (file) {
+            setCurrentQuestion(prev => updateQuestionWithFile(prev || {}, file, result.url!))
           }
         }
-        return f
-      }))
-
-      // 如果上传成功，更新 currentQuestion
-      if (result.success) {
-        updateCurrentQuestionWithFile(file.file, result.url!)
       }
-    } catch (error) {
-      setUploadedFiles(prev => prev.map((f, i) => {
-        if (i === index) {
-          return {
-            ...f,
-            isUploading: false,
-            uploadSuccess: false,
-            uploadError: '上传失败'
-          }
-        }
-        return f
-      }))
-    }
+    )
   }
 
-  const updateCurrentQuestionWithFile = (file: File, url: string) => {
-    setCurrentQuestion(prev => {
-      const updated = { ...prev } as Partial<Question>
 
-      if (file.type.startsWith('image/')) {
-        updated.images = [...(updated.images || []), url]
-      } else if (file.type.startsWith('video/')) {
-        updated.videos = [...(updated.videos || []), url]
-      } else if (file.type.startsWith('audio/')) {
-        updated.audios = [...(updated.audios || []), url]
-      }
-
-      return updated
-    })
-  }
 
   const handleRemoveFile = (index: number) => {
     const fileToRemove = uploadedFiles[index]
@@ -144,19 +90,9 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
 
     // 从 currentQuestion 中移除对应的文件
     if (fileToRemove.uploadSuccess && fileToRemove.url) {
-      setCurrentQuestion(prev => {
-        const updated = { ...prev } as Partial<Question>
-
-        if (fileToRemove.file.type.startsWith('image/')) {
-          updated.images = updated.images?.filter(url => url !== fileToRemove.url) || []
-        } else if (fileToRemove.file.type.startsWith('video/')) {
-          updated.videos = updated.videos?.filter(url => url !== fileToRemove.url) || []
-        } else if (fileToRemove.file.type.startsWith('audio/')) {
-          updated.audios = updated.audios?.filter(url => url !== fileToRemove.url) || []
-        }
-
-        return updated
-      })
+      setCurrentQuestion(prev =>
+        removeFileFromQuestion(prev || {}, fileToRemove.file, fileToRemove.url!)
+      )
     }
   }
 
@@ -208,14 +144,16 @@ export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportPro
   }
 
   const getFileIcon = (file: File) => {
-    if (file.type.startsWith('image/')) {
-      return <Image className="w-4 h-4 text-blue-500" />
-    } else if (file.type.startsWith('video/')) {
-      return <Video className="w-4 h-4 text-purple-500" />
-    } else if (file.type.startsWith('audio/')) {
-      return <Music className="w-4 h-4 text-green-500" />
-    } else {
-      return <FileText className="w-4 h-4 text-gray-500" />
+    const fileType = getFileType(file)
+    switch (fileType) {
+      case 'image':
+        return <Image className="w-4 h-4 text-blue-500" />
+      case 'video':
+        return <Video className="w-4 h-4 text-purple-500" />
+      case 'audio':
+        return <Music className="w-4 h-4 text-green-500" />
+      default:
+        return <FileText className="w-4 h-4 text-gray-500" />
     }
   }
 
