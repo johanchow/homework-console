@@ -13,7 +13,7 @@ import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-rea
 import { useRouter } from 'next/navigation'
 import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
-import { getGoal, updateGoal } from '@/api/axios/goal'
+import { getGoal, updateGoal, deleteGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
 import { toast } from 'sonner'
@@ -83,9 +83,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 删除 Goal 的 mutation
   const deleteGoalMutation = useMutation({
     mutationFn: async () => {
-      // TODO: 实现删除 Goal 的 API
-      console.log('删除 Goal:', goalId)
-      return Promise.resolve()
+      return deleteGoal(goalId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
