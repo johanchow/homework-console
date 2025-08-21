@@ -17,7 +17,7 @@ import { Exam, ExamStatus } from '@/entity/exam'
 import { Question } from '@/entity/question'
 import { batchCreateQuestions } from '@/api/axios/question'
 
-import { QuestionShow } from '@/feature/QuestionShow'
+import { QuestionShow } from '@/feature/QuestionShowRead'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { QuestionAdding } from '@/feature/QuestionAdding'
 import { QuestionImport } from '@/feature/QuestionImport'

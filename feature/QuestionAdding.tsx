@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
-import { QuestionFromImport } from './QuestionFromImport'
+import { QuestionFromInput } from './QuestionFromInput'
+import { QuestionFromBatch } from './QuestionFromBatch'
 import { Question } from '@/entity/question'
 
 interface QuestionAddingProps {
@@ -16,18 +17,16 @@ interface QuestionAddingProps {
 }
 
 export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, onPromptUpdated }: QuestionAddingProps) {
-  const [questions, setQuestions] = useState<Question[]>(currentQuestions)
-
   const handleAIQuestionSelected = (question: Question) => {
-    const updatedQuestions = [...questions, question]
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
+    onQuestionsUpdated([...currentQuestions, question])
   }
 
   const handleImportQuestionSelected = (question: Question) => {
-    const updatedQuestions = [...questions, question]
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
+    onQuestionsUpdated([...currentQuestions, question])
+  }
+
+  const handleBatchQuestionSelected = (batchQuestions: Question[]) => {
+    onQuestionsUpdated([...currentQuestions, ...batchQuestions])
   }
 
   return (
@@ -42,13 +41,17 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="import" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="import" className="flex items-center">
-                <Upload className="w-4 h-4 mr-2" />
+                <Upload className="w-3 h-4 mr-1" />
                 智能录入
               </TabsTrigger>
+              <TabsTrigger value="batch" className="flex items-center">
+                <Upload className="w-3 h-4 mr-1" />
+                批量导入
+              </TabsTrigger>
               <TabsTrigger value="ai" className="flex items-center">
-                <Bot className="w-4 h-4 mr-2" />
+                <Bot className="w-3 h-3 mr-1" />
                 AI出题
               </TabsTrigger>
             </TabsList>
@@ -62,9 +65,17 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
               />
             </TabsContent>
 
+            <TabsContent value="batch" className="space-y-6">
+              <QuestionFromBatch
+                onQuestionSelected={handleBatchQuestionSelected}
+              />
+            </TabsContent>
+
             {/* 智能录入Tab */}
             <TabsContent value="import" className="space-y-6">
-              <QuestionFromImport onQuestionSelected={handleImportQuestionSelected} />
+              <QuestionFromInput
+                onQuestionSelected={handleImportQuestionSelected}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>
