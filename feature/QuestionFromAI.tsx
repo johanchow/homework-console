@@ -9,7 +9,7 @@ import { Badge } from '@/component/badge'
 import { Question, QuestionSubject } from '@/entity/question'
 import { newUuid } from '@/util'
 import { generateQuestionsWithPrompt } from '@/api/axios/question'
-import { QuestionShow } from './QuestionShow'
+import { QuestionShow } from './QuestionShowRead'
 
 interface ConversationMessage {
   id: string

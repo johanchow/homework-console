@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { Button } from '@/component/button'
 import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide-react'
 import { Question, QuestionType, QuestionSubject } from '@/entity/question'
-import { QuestionShow } from './QuestionShow'
+import { QuestionShowEdit } from './QuestionShowEdit'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/component/dialog'
-import { newUuid } from '@/util'
 import { UploadedFile, handleFileUploadEvent, getFileType } from '@/util/file'
+import { parseQuestionFromImages } from '@/api/axios/question'
 
 interface QuestionFromBatchProps {
   onQuestionSelected: (questions: Question[]) => void
@@ -45,34 +45,19 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
     setUploadedFiles(prev => prev.filter((_, i) => i !== index))
   }
 
-  const handlePreview = () => {
-    const successFiles = uploadedFiles.filter(f => f.uploadSuccess && f.url)
+  const handlePreview = async () => {
+    const successFileUrls = uploadedFiles.filter(f => f.uploadSuccess && f.url)
 
-    if (successFiles.length === 0) {
+    if (successFileUrls.length === 0) {
       alert('请先上传文件')
       return
     }
 
-    // 为每个文件创建一个问题
-    const questions: Question[] = successFiles.map((file, index) => ({
-      id: newUuid(),
-      title: `批量导入题目 ${index + 1}`,
-      type: QuestionType.choice,
-      subject: QuestionSubject.chinese,
-      tip: '',
-      options: [],
-      images: file.file.type.startsWith('image/') ? [file.url!] : [],
-      videos: file.file.type.startsWith('video/') ? [file.url!] : [],
-      audios: file.file.type.startsWith('audio/') ? [file.url!] : [],
-      attachments: file.file.type.startsWith('application/') ? [file.url!] : [],
-      links: [],
-      material: '',
-      creator_id: '',
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    }))
+    const { questions } = await parseQuestionFromImages({
+      image_urls: successFileUrls.map(f => f.url!)
+    })
 
-    setBatchQuestions(questions)
+    setBatchQuestions(questions as unknown as Question[])
     setShowPreviewDialog(true)
   }
 
@@ -117,10 +102,7 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
             <label htmlFor="batch-file-upload">
               <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-sm text-gray-600 mb-4">
-                支持 JPG、PNG、PDF、视频、音频格式，可上传多个文件
-              </p>
-              <p className="text-xs text-gray-500">
-                每个文件将生成一个独立的题目
+                支持 JPG、PNG、PDF格式，可上传多个文件
               </p>
             </label>
             <input
@@ -201,12 +183,24 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
               <div key={question.id} className="border rounded-lg p-4 bg-gray-50">
                 <div className="flex items-center justify-between mb-2">
                   <h4 className="font-medium text-sm text-gray-600">题目 {index + 1}</h4>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setBatchQuestions(prev => prev.filter((_, i) => i !== index))
+                    }}
+                    className="h-6 w-6 p-0 hover:bg-red-50"
+                  >
+                    <X className="w-4 h-4 text-red-500" />
+                  </Button>
                 </div>
                 <div className="min-h-[150px]">
-                  <QuestionShow
+                  <QuestionShowEdit
                     question={question}
-                    isPreview={true}
-                    onChange={() => { }} // 批量模式下不允许编辑
+                    onChange={(newQuestion) => {
+                      setBatchQuestions(prev => prev.map((q, i) => i === index ? q : newQuestion))
+                    }}
                   />
                 </div>
               </div>

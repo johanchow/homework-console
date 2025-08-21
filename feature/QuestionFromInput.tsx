@@ -7,7 +7,7 @@ import { Upload, Check, X, Loader2, Image, FileText, Music, Video } from 'lucide
 import { Question, QuestionType, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
 import { Input } from '@/component/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
-import { QuestionShow } from './QuestionShow'
+import { QuestionShow } from './QuestionShowRead'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/component/dialog'
 import { UrlLink } from '@/component/url-link'
 import { Label } from '@/component/label'
@@ -27,7 +27,7 @@ interface FormData {
   tip: string
 }
 
-export function QuestionFromImport({ onQuestionSelected }: QuestionFromImportProps) {
+export function QuestionFromInput({ onQuestionSelected }: QuestionFromImportProps) {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [showPreviewDialog, setShowPreviewDialog] = useState(false)
   const [currentQuestion, setCurrentQuestion] = useState<Partial<Question> | null>(null)

@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/component/tabs'
 import { Upload, Bot } from 'lucide-react'
 import { QuestionFromAI } from './QuestionFromAI'
-import { QuestionFromImport } from './QuestionFromImport'
+import { QuestionFromInput } from './QuestionFromInput'
 import { QuestionFromBatch } from './QuestionFromBatch'
 import { Question } from '@/entity/question'
 
@@ -17,24 +17,16 @@ interface QuestionAddingProps {
 }
 
 export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, onPromptUpdated }: QuestionAddingProps) {
-  const [questions, setQuestions] = useState<Question[]>(currentQuestions)
-
   const handleAIQuestionSelected = (question: Question) => {
-    const updatedQuestions = [...questions, question]
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
+    onQuestionsUpdated([...currentQuestions, question])
   }
 
   const handleImportQuestionSelected = (question: Question) => {
-    const updatedQuestions = [...questions, question]
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
+    onQuestionsUpdated([...currentQuestions, question])
   }
 
   const handleBatchQuestionSelected = (batchQuestions: Question[]) => {
-    const updatedQuestions = [...questions, ...batchQuestions]
-    setQuestions(updatedQuestions)
-    onQuestionsUpdated(updatedQuestions)
+    onQuestionsUpdated([...currentQuestions, ...batchQuestions])
   }
 
   return (
@@ -81,7 +73,9 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
 
             {/* 智能录入Tab */}
             <TabsContent value="import" className="space-y-6">
-              <QuestionFromImport onQuestionSelected={handleImportQuestionSelected} />
+              <QuestionFromInput
+                onQuestionSelected={handleImportQuestionSelected}
+              />
             </TabsContent>
           </Tabs>
         </CardContent>

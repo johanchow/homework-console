@@ -1,6 +1,8 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
@@ -33,7 +35,8 @@ export default function CreateGoalPage() {
     questions: [],
     assignees: [],
     start_time: '',
-  })
+  });
+  const router = useRouter();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
@@ -94,7 +97,8 @@ export default function CreateGoalPage() {
       plan_starttime: formData.start_time!,
     }
     const exam = await createExam(newExam)
-    alert('创建成功');
+    toast.success('创建成功');
+    router.push(`/goal/${goal.id}`);
   }
 
   const handleDeleteQuestion = (questionId: string) => {
