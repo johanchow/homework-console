@@ -32,9 +32,7 @@ export const createGoal = async (
 };
 
 export const deleteGoal = async (id: string): Promise<void> => {
-  const response = await request.delete(`/goal/delete`, {
-    params: { id },
-  });
+  const response = await request.delete(`/goal/${id}`);
   return response.data;
 };
 

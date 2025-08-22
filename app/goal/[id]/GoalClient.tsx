@@ -13,7 +13,7 @@ import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-rea
 import { useRouter } from 'next/navigation'
 import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
-import { getGoal, updateGoal } from '@/api/axios/goal'
+import { getGoal, updateGoal, deleteGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
 import { toast } from 'sonner'
@@ -83,9 +83,8 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 删除 Goal 的 mutation
   const deleteGoalMutation = useMutation({
     mutationFn: async () => {
-      // TODO: 实现删除 Goal 的 API
       console.log('删除 Goal:', goalId)
-      return Promise.resolve()
+      return deleteGoal(goalId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
@@ -104,12 +103,18 @@ export function GoalClient({ goalId }: GoalClientProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exams', { goal_id: goalId }] })
+      router.push('/goal')
       toast.success('考试记录删除成功')
     },
     onError: () => {
       toast.error('考试记录删除失败')
     }
   })
+
+  // ✅ 修复：将 handleDelete 移到所有 hooks 之后
+  const handleDelete = () => {
+    deleteGoalMutation.mutate()
+  }
 
   const handleEdit = () => {
     if (goal) {
@@ -278,7 +283,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
                               size="sm"
                               variant="destructive"
                               onClick={() => {
-                                deleteGoalMutation.mutate()
+                                handleDelete()
                                 setGoalDeleteOpen(false)
                               }}
                             >

@@ -27,6 +27,10 @@ export const listQuestions = async (
   return response.data;
 };
 
+export const deleteQuestion = async (id: string): Promise<void> => {
+  await request.delete(`/question/${id}`);
+};
+
 export const generateQuestionsWithPrompt = async (params: {
   ai_prompt: string;
   subject: string;
