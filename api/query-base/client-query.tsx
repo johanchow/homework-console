@@ -8,7 +8,15 @@ let queryClient: QueryClient | null = null
 
 export function getQueryClient() {
   if (!queryClient) {
-    queryClient = new QueryClient()
+    // queryClient = new QueryClient()
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          staleTime: 0, // 立即认为数据过期
+          gcTime: 0,    // 立即垃圾回收
+        },
+      },
+    })
   }
   return queryClient
 }
