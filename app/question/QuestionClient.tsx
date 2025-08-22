@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -10,15 +10,13 @@ import { Input } from '@/component/input'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { Search, Edit, Trash2, Image, Video, Volume2, Plus, Eye } from 'lucide-react'
-import { deleteQuestion, listQuestions } from '@/api/axios/question'
+import { deleteQuestion, listQuestions, updateQuestion } from '@/api/axios/question'
 import { FilterParams } from '@/api/typing/question'
 import { Question, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 
 export function QuestionClient() {
   const router = useRouter()
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [total, setTotal] = useState(0)
   const [filters, setFilters] = useState<FilterParams>({})
   const [pagination, setPagination] = useState({
     page: 1,
@@ -32,13 +30,9 @@ export function QuestionClient() {
     staleTime: 2 * 60 * 1000, // 2分钟缓存
   })
 
-  // 当数据更新时同步状态
-  useEffect(() => {
-    if (data) {
-      setQuestions(data.questions)
-      setTotal(data.total)
-    }
-  }, [data])
+  // 直接从 data 获取数据，避免额外的状态管理
+  const questions = data?.questions || []
+  const total = data?.total || 0
 
   const deleteQuestionMutation = useMutation({
     mutationFn: async (questionId: string) => {
@@ -54,12 +48,18 @@ export function QuestionClient() {
     }
   })
 
-  const handleSaveQuestion = (updatedQuestion: Question) => {
-    setQuestions(prev =>
-      prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
-    )
-    toast.success('题目已更新')
-  }
+  const updateQuestionMutation = useMutation({
+    mutationFn: async (updatedQuestion: Question) => {
+      await updateQuestion(updatedQuestion.id, updatedQuestion)
+      queryClient.removeQueries({ queryKey: ['questions'] })
+    },
+    onSuccess: () => {
+      toast.success('题目已更新')
+    },
+    onError: () => {
+      toast.error('题目更新失败')
+    }
+  })
 
   const handleViewQuestion = (questionId: string) => {
     router.push(`/question/${questionId}`)
@@ -283,7 +283,7 @@ export function QuestionClient() {
                             </Button>
                             <QuestionEditModal
                               question={question}
-                              onSave={handleSaveQuestion}
+                              onSave={(n) => updateQuestionMutation.mutate(n)}
                             >
                               <Button
                                 variant="ghost"
