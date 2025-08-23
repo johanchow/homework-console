@@ -15,7 +15,7 @@ import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { Plus, X, Save, Edit, Upload, Image, Video, Music, FileText } from 'lucide-react'
-import { Question, QuestionType } from '@/entity/question'
+import { Question, QuestionSubject, QuestionType, questionSubjectLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
 
 interface QuestionEditModalProps {
@@ -25,8 +25,6 @@ interface QuestionEditModalProps {
   open?: boolean
   onOpenChange?: (open: boolean) => void
 }
-
-const subjects = ['数学', '英语', '计算机科学', '物理', '化学', '历史', '地理', '生物', '政治', '语文']
 
 export function QuestionEditModal({ question, onSave, children, open, onOpenChange }: QuestionEditModalProps) {
   const [internalOpen, setInternalOpen] = useState(false)
@@ -258,9 +256,9 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
                   <SelectValue placeholder="选择科目" />
                 </SelectTrigger>
                 <SelectContent>
-                  {subjects.map((subject) => (
+                  {Object.values(QuestionSubject).map((subject) => (
                     <SelectItem key={subject} value={subject}>
-                      {subject}
+                      {questionSubjectLabel[subject]}
                     </SelectItem>
                   ))}
                 </SelectContent>

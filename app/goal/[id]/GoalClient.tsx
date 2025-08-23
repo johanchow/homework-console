@@ -9,13 +9,14 @@ import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
-import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
-import { getGoal } from '@/api/axios/goal'
+import { getGoal, updateGoal, deleteGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/component/tooltip'
 import { toast } from 'sonner'
 
 const statusConfig = {
@@ -68,9 +69,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 更新 Goal 的 mutation
   const updateGoalMutation = useMutation({
     mutationFn: async (data: { name: string; status: GoalStatus }) => {
-      // TODO: 实现更新 Goal 的 API
-      console.log('更新 Goal:', data)
-      return Promise.resolve()
+      return updateGoal(goalId, data)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goal', goalId] })
@@ -85,9 +84,8 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 删除 Goal 的 mutation
   const deleteGoalMutation = useMutation({
     mutationFn: async () => {
-      // TODO: 实现删除 Goal 的 API
       console.log('删除 Goal:', goalId)
-      return Promise.resolve()
+      return deleteGoal(goalId)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['goals'] })
@@ -106,12 +104,18 @@ export function GoalClient({ goalId }: GoalClientProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exams', { goal_id: goalId }] })
+      router.push('/goal')
       toast.success('考试记录删除成功')
     },
     onError: () => {
       toast.error('考试记录删除失败')
     }
   })
+
+  // ✅ 修复：将 handleDelete 移到所有 hooks 之后
+  const handleDelete = () => {
+    deleteGoalMutation.mutate()
+  }
 
   const handleEdit = () => {
     if (goal) {
@@ -280,7 +284,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
                               size="sm"
                               variant="destructive"
                               onClick={() => {
-                                deleteGoalMutation.mutate()
+                                handleDelete()
                                 setGoalDeleteOpen(false)
                               }}
                             >
@@ -385,9 +389,28 @@ export function GoalClient({ goalId }: GoalClientProps) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>相关考试记录</span>
-              <Badge variant="secondary">
-                {examsLoading ? '加载中...' : (examsData?.exams?.length || 0)} 条记录
-              </Badge>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary">
+                  {examsLoading ? '加载中...' : (examsData?.exams?.length || 0)} 条记录
+                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`/exam/create?goal_id=${goalId}`, '_blank')}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>创建考试</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </CardTitle>
             <CardDescription>
               查看所有与此学习目标相关的考试记录
