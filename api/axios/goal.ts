@@ -32,8 +32,17 @@ export const createGoal = async (
 };
 
 export const deleteGoal = async (id: string): Promise<void> => {
-  const response = await request.delete(`/goal/delete`, {
-    params: { id },
+  const response = await request.delete(`/goal/${id}`);
+  return response.data;
+};
+
+export const updateGoal = async (
+  id: string,
+  data: Partial<Goal>
+): Promise<void> => {
+  const response = await request.put(`/goal/update`, {
+    id,
+    ...data,
   });
   return response.data;
 };

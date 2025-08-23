@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
@@ -16,7 +18,7 @@ import { Search, Target, Calendar, BookOpen, Plus, MoreHorizontal, Trash2 } from
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
-import { listGoals } from '@/api/axios/goal'
+import { listGoals, deleteGoal } from '@/api/axios/goal'
 import { Goal } from '@/entity/goal'
 
 // 扩展Goal类型以匹配当前UI需求
@@ -33,6 +35,7 @@ export function GoalListClient() {
   const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter()
   const itemsPerPage = 12
+  const queryClient = useQueryClient()
 
   // 使用React Query获取数据
   const { data: goalsData, isLoading, error } = useQuery({
@@ -84,9 +87,21 @@ export function GoalListClient() {
     setCurrentPage(1) // 重置到第一页
   }
 
+  // 删除目标的mutation
+  const deleteGoalMutation = useMutation({
+    mutationFn: deleteGoal,
+    onSuccess: () => {
+      toast.success('删除成功')
+      // 重新获取数据以更新列表
+      window.location.reload()
+    },
+    onError: () => {
+      toast.error('删除失败')
+    }
+  })
+
   const handleDeleteGoal = (goalId: string) => {
-    // TODO: 实现删除逻辑
-    console.log('删除目标:', goalId)
+    deleteGoalMutation.mutate(goalId)
   }
 
   if (error) {

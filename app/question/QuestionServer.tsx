@@ -4,21 +4,24 @@ import { listQuestions } from '@/api/fetch/question'
 import { QuestionClient } from './QuestionClient'
 
 export async function QuestionServer() {
-	const serverQuery = createServerQueryClient()
+  const serverQuery = createServerQueryClient()
 
-	// 预取题目数据
-	await serverQuery.prefetch([
-		{
-			queryKey: ['questions', {}, { page: 1, page_size: 20 }],
-			queryFn: () => listQuestions({}, { page: 1, page_size: 20 }),
-		}
-	])
+  // 预取题目数据 - 确保与客户端初始状态匹配
+  const initialFilters = {}
+  const initialPagination = { page: 1, page_size: 20 }
 
-	const dehydratedState = serverQuery.dehydratedState()
+  await serverQuery.prefetch([
+    {
+      queryKey: ['questions', initialFilters, initialPagination],
+      queryFn: () => listQuestions(initialFilters, initialPagination),
+    }
+  ])
 
-	return (
-		<HydrationBoundary state={dehydratedState}>
-			<QuestionClient />
-		</HydrationBoundary>
-	)
+  const dehydratedState = serverQuery.dehydratedState()
+
+  return (
+    <HydrationBoundary state={dehydratedState}>
+      <QuestionClient />
+    </HydrationBoundary>
+  )
 } 

@@ -6,10 +6,10 @@ import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { Question, QuestionType } from '@/entity/question'
+import { Question, QuestionSubject } from '@/entity/question'
 import { newUuid } from '@/util'
 import { generateQuestionsWithPrompt } from '@/api/axios/question'
-import { QuestionShow } from './QuestionShow'
+import { QuestionShow } from './QuestionShowRead'
 
 interface ConversationMessage {
   id: string
@@ -49,7 +49,7 @@ export function QuestionFromAI({ onQuestionSelected, prompt: outPrompt, onPrompt
     try {
       const resp = await generateQuestionsWithPrompt({
         ai_prompt: textToUse,
-        subject: 'chinese',
+        subject: QuestionSubject.chinese,
         count: count,
         session_id: sessionIdRef.current
       })

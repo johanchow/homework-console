@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/component/card'
 import { Badge } from '@/component/badge'
 import { ArrowLeft, Edit, Eye } from 'lucide-react'
 import { getQuestion, updateQuestion } from '@/api/axios/question'
-import { QuestionShow } from '@/feature/QuestionShow'
+import { QuestionShow } from '@/feature/QuestionShowRead'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { toast } from 'sonner'
 
