@@ -24,15 +24,18 @@ export function QuestionClient() {
   })
 
   const queryClient = useQueryClient()
+  console.log("start useQuery");
   const { data, isLoading, error } = useQuery({
     queryKey: ['questions', filters, pagination],
     queryFn: () => listQuestions(filters, pagination),
     staleTime: 2 * 60 * 1000, // 2分钟缓存
+    gcTime: 2 * 60 * 1000, // 2分钟缓存
     // staleTime: 0, // 立即认为数据过期，确保获取最新数据
     // gcTime: 0,    // 立即垃圾回收
     // refetchOnMount: true, // 组件挂载时重新获取
     // refetchOnWindowFocus: true, // 窗口
   })
+  console.log("end useQuery: ", data?.total);
 
   // 直接从 data 获取数据，避免额外的状态管理
   const questions = data?.questions || []

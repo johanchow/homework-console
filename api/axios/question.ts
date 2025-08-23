@@ -18,6 +18,7 @@ export const listQuestions = async (
     page_size: number;
   }
 ): Promise<{ questions: Question[]; total: number }> => {
+  console.log("axios listQuestions");
   const response = await request.get(`/question/list`, {
     params: {
       ...filters,

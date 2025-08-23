@@ -3,10 +3,6 @@ import { createServerQueryClient } from '@/api/query-base/server-query'
 import { listQuestions } from '@/api/fetch/question'
 import { QuestionClient } from './QuestionClient'
 
-// 强制动态渲染，禁用缓存
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 export async function QuestionServer() {
   const serverQuery = createServerQueryClient()
 

@@ -1,24 +1,10 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { QueryClientProvider, HydrationBoundary } from '@tanstack/react-query'
-import { QueryClient } from '@tanstack/react-query'
-
-let queryClient: QueryClient | null = null
+import { QueryClient, QueryClientProvider, HydrationBoundary } from '@tanstack/react-query'
 
 export function getQueryClient() {
-  if (!queryClient) {
-    // queryClient = new QueryClient()
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          staleTime: 0, // 立即认为数据过期
-          gcTime: 0,    // 立即垃圾回收
-        },
-      },
-    })
-  }
-  return queryClient
+  return new QueryClient()
 }
 
 export function ReactQueryProvider({ children, state }: { children: ReactNode; state: unknown }) {
@@ -26,7 +12,7 @@ export function ReactQueryProvider({ children, state }: { children: ReactNode; s
 
   return (
     <QueryClientProvider client={queryClient}>
-      <HydrationBoundary state={state}> {children} </HydrationBoundary>
+      <HydrationBoundary state={state}>{children}</HydrationBoundary>
     </QueryClientProvider>
   )
 }
