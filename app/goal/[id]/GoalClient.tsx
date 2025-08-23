@@ -9,13 +9,14 @@ import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
-import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Edit, Save, X, Eye, Trash2, AlertTriangle, Plus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { GoalStatus } from '@/entity/goal'
 import { Exam, ExamStatus } from '@/entity/exam'
 import { getGoal, updateGoal, deleteGoal } from '@/api/axios/goal'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/component/tooltip'
 import { toast } from 'sonner'
 
 const statusConfig = {
@@ -388,9 +389,28 @@ export function GoalClient({ goalId }: GoalClientProps) {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>相关考试记录</span>
-              <Badge variant="secondary">
-                {examsLoading ? '加载中...' : (examsData?.exams?.length || 0)} 条记录
-              </Badge>
+              <div className="flex items-center space-x-2">
+                <Badge variant="secondary">
+                  {examsLoading ? '加载中...' : (examsData?.exams?.length || 0)} 条记录
+                </Badge>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.open(`/exam/create?goal_id=${goalId}`, '_blank')}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>创建考试</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </CardTitle>
             <CardDescription>
               查看所有与此学习目标相关的考试记录

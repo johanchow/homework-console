@@ -87,20 +87,22 @@ export function GoalListClient() {
     setCurrentPage(1) // 重置到第一页
   }
 
-  const handleDelete = (goalId: string) => {
-    deleteGoalMutation.mutate(goalId)
-  }
-
+  // 删除目标的mutation
   const deleteGoalMutation = useMutation({
     mutationFn: deleteGoal,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['goals'] })
       toast.success('删除成功')
+      // 重新获取数据以更新列表
+      window.location.reload()
     },
     onError: () => {
       toast.error('删除失败')
     }
   })
+
+  const handleDeleteGoal = (goalId: string) => {
+    deleteGoalMutation.mutate(goalId)
+  }
 
   if (error) {
     return (
@@ -194,7 +196,7 @@ export function GoalListClient() {
                     <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleDelete(goal.id)
+                        handleDeleteGoal(goal.id)
                       }}
                       className="text-red-600 focus:text-red-600"
                     >
