@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
@@ -35,6 +35,7 @@ export function GoalListClient() {
   const [currentPage, setCurrentPage] = useState(1)
   const router = useRouter()
   const itemsPerPage = 12
+  const queryClient = useQueryClient()
 
   // 使用React Query获取数据
   const { data: goalsData, isLoading, error } = useQuery({

@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
@@ -10,46 +10,63 @@ import { Input } from '@/component/input'
 import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { Search, Edit, Trash2, Image, Video, Volume2, Plus, Eye } from 'lucide-react'
-import { listQuestions } from '@/api/axios/question'
+import { deleteQuestion, listQuestions, updateQuestion } from '@/api/axios/question'
 import { FilterParams } from '@/api/typing/question'
 import { Question, QuestionSubject, questionTypeLabel, questionSubjectLabel } from '@/entity/question'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 
 export function QuestionClient() {
   const router = useRouter()
-  const [questions, setQuestions] = useState<Question[]>([])
-  const [total, setTotal] = useState(0)
   const [filters, setFilters] = useState<FilterParams>({})
   const [pagination, setPagination] = useState({
     page: 1,
     page_size: 20,
   })
 
+  const queryClient = useQueryClient()
+  console.log("start useQuery");
   const { data, isLoading, error } = useQuery({
     queryKey: ['questions', filters, pagination],
     queryFn: () => listQuestions(filters, pagination),
     staleTime: 2 * 60 * 1000, // 2分钟缓存
+    gcTime: 2 * 60 * 1000, // 2分钟缓存
+    // staleTime: 0, // 立即认为数据过期，确保获取最新数据
+    // gcTime: 0,    // 立即垃圾回收
+    // refetchOnMount: true, // 组件挂载时重新获取
+    // refetchOnWindowFocus: true, // 窗口
+  })
+  console.log("end useQuery: ", data?.total);
+
+  // 直接从 data 获取数据，避免额外的状态管理
+  const questions = data?.questions || []
+  const total = data?.total || 0
+
+  const deleteQuestionMutation = useMutation({
+    mutationFn: async (questionId: string) => {
+      await deleteQuestion(questionId)
+      // queryClient.removeQueries({ queryKey: ['questions'] })
+      queryClient.invalidateQueries({ queryKey: ['questions'] })
+    },
+    onSuccess: () => {
+      toast.success('题目已删除')
+    },
+    onError: () => {
+      toast.error('题目删除失败')
+    }
   })
 
-  // 当数据更新时同步状态
-  useEffect(() => {
-    if (data) {
-      setQuestions(data.questions)
-      setTotal(data.total)
+  const updateQuestionMutation = useMutation({
+    mutationFn: async (updatedQuestion: Question) => {
+      await updateQuestion(updatedQuestion.id, updatedQuestion)
+      queryClient.removeQueries({ queryKey: ['questions'] })
+    },
+    onSuccess: () => {
+      toast.success('题目已更新')
+    },
+    onError: () => {
+      toast.error('题目更新失败')
     }
-  }, [data])
-
-  const handleDeleteQuestion = (questionId: string) => {
-    setQuestions(prev => prev.filter(q => q.id !== questionId))
-    toast.success('题目已删除')
-  }
-
-  const handleSaveQuestion = (updatedQuestion: Question) => {
-    setQuestions(prev =>
-      prev.map(q => q.id === updatedQuestion.id ? updatedQuestion : q)
-    )
-    toast.success('题目已更新')
-  }
+  })
 
   const handleViewQuestion = (questionId: string) => {
     router.push(`/question/${questionId}`)
@@ -273,7 +290,7 @@ export function QuestionClient() {
                             </Button>
                             <QuestionEditModal
                               question={question}
-                              onSave={handleSaveQuestion}
+                              onSave={(n) => updateQuestionMutation.mutate(n)}
                             >
                               <Button
                                 variant="ghost"
@@ -287,7 +304,7 @@ export function QuestionClient() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteQuestion(question.id)}
+                              onClick={() => deleteQuestionMutation.mutate(question.id)}
                               className="text-red-600 hover:text-red-700"
                               title="删除题目"
                             >

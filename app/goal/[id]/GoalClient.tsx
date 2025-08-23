@@ -84,6 +84,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
   // 删除 Goal 的 mutation
   const deleteGoalMutation = useMutation({
     mutationFn: async () => {
+      console.log('删除 Goal:', goalId)
       return deleteGoal(goalId)
     },
     onSuccess: () => {
@@ -103,12 +104,18 @@ export function GoalClient({ goalId }: GoalClientProps) {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['exams', { goal_id: goalId }] })
+      router.push('/goal')
       toast.success('考试记录删除成功')
     },
     onError: () => {
       toast.error('考试记录删除失败')
     }
   })
+
+  // ✅ 修复：将 handleDelete 移到所有 hooks 之后
+  const handleDelete = () => {
+    deleteGoalMutation.mutate()
+  }
 
   const handleEdit = () => {
     if (goal) {
@@ -277,7 +284,7 @@ export function GoalClient({ goalId }: GoalClientProps) {
                               size="sm"
                               variant="destructive"
                               onClick={() => {
-                                deleteGoalMutation.mutate()
+                                handleDelete()
                                 setGoalDeleteOpen(false)
                               }}
                             >

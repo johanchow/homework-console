@@ -31,6 +31,7 @@ export const listQuestions = async (
     "fetch listQuestions data: ",
     data.questions.map((question: Question) => question.id).join("+")
   );
+  console.log("fetch listQuestions total: ", data.total);
 
   return data;
 };
