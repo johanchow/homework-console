@@ -18,7 +18,7 @@ import { createGoal, batchCreateQuestions, createExam } from '@/api/axios'
 import { Duration } from '@/component/duration'
 import Calendar from '@/component/calendar'
 
-interface GoalCreateFormData extends Pick<Goal, 'name' | 'subject' | 'ai_prompt'> {
+interface GoalCreateFormData extends Pick<Goal, 'name' | 'ai_prompt'> {
   questions: Question[]
   assignees: string[]
   start_time?: string
@@ -30,7 +30,6 @@ export default function CreateGoalPage() {
   const { user } = useUserStore();
   const [formData, setFormData] = useState<GoalCreateFormData>({
     name: '',
-    subject: '',
     ai_prompt: '',
     questions: [],
     assignees: [],
@@ -77,7 +76,6 @@ export default function CreateGoalPage() {
     // 1. 先创建目标
     const newGoal = {
       name: formData.name,
-      subject: formData.subject || 'math',
       creator_id: user?.id,
     }
     const goal = await createGoal(newGoal)

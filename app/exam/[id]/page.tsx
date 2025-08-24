@@ -4,6 +4,9 @@ import { useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
 import { useUserStore } from '@/store/useUserStore'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
@@ -25,6 +28,15 @@ import { getExam, updateExam } from '@/api/axios/exam'
 import { updateQuestion } from '@/api/axios/question'
 import { toLocalDateTimeString } from '@/util/formatter'
 
+// 定义表单验证模式
+const examFormSchema = z.object({
+  title: z.string().min(1, '考试标题不能为空').max(100, '考试标题不能超过100个字符'),
+  plan_starttime: z.string().min(1, '请选择开始时间'),
+  plan_duration: z.number().min(1, '考试时长不能少于1分钟').max(480, '考试时长不能超过8小时'),
+})
+
+type ExamFormData = z.infer<typeof examFormSchema>
+
 export default function ExamEditPage() {
   const params = useParams()
   const examId = params.id as string
@@ -34,9 +46,21 @@ export default function ExamEditPage() {
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [isEditingExam, setIsEditingExam] = useState(false)
-  const [examFormData, setExamFormData] = useState({
-    plan_starttime: '',
-    plan_duration: 0
+
+  // 使用 react-hook-form
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+    setValue,
+  } = useForm<ExamFormData>({
+    resolver: zodResolver(examFormSchema),
+    defaultValues: {
+      title: '',
+      plan_starttime: '',
+      plan_duration: 0,
+    },
   })
   const [showQuestionAdding, setShowQuestionAdding] = useState(false)
   const [showQuestionImport, setShowQuestionImport] = useState(false)
@@ -115,7 +139,8 @@ export default function ExamEditPage() {
 
   const handleEditExam = () => {
     if (exam) {
-      setExamFormData({
+      reset({
+        title: exam.title,
         plan_starttime: toLocalDateTimeString(new Date(exam.plan_starttime)),
         plan_duration: exam.plan_duration
       })
@@ -123,16 +148,17 @@ export default function ExamEditPage() {
     }
   }
 
-  const handleSaveExam = () => {
+  const handleSaveExam = (data: ExamFormData) => {
     if (!exam) return
 
     // 将 datetime-local 格式转换为 ISO 格式
-    const isoDateTime = new Date(examFormData.plan_starttime).toISOString()
+    const isoDateTime = new Date(data.plan_starttime).toISOString()
 
     const updatedExam = {
       ...exam,
+      title: data.title.trim(),
       plan_starttime: isoDateTime,
-      plan_duration: examFormData.plan_duration,
+      plan_duration: data.plan_duration,
       updated_at: new Date().toISOString()
     }
 
@@ -256,7 +282,22 @@ export default function ExamEditPage() {
               {/* 考试标题 */}
               <div className="flex items-center space-x-2">
                 <Label className="text-sm text-gray-500 min-w-fit">考试标题：</Label>
-                <span className="text-sm font-medium">{exam.title}</span>
+                {isEditingExam ? (
+                  <div className="flex-1 max-w-md">
+                    <input
+                      type="text"
+                      {...register('title')}
+                      className={`text-sm border rounded px-2 py-1 w-full ${errors.title ? 'border-red-500' : 'border-gray-300'
+                        }`}
+                      placeholder="请输入考试标题"
+                    />
+                    {errors.title && (
+                      <p className="text-red-500 text-xs mt-1">{errors.title.message}</p>
+                    )}
+                  </div>
+                ) : (
+                  <span className="text-sm font-medium">{exam.title}</span>
+                )}
               </div>
 
               {/* 考试状态信息 */}
@@ -287,29 +328,39 @@ export default function ExamEditPage() {
                       <>
                         <div className="flex items-center space-x-2">
                           <Label className="text-sm text-gray-500">计划开始时间：</Label>
-                          <input
-                            type="datetime-local"
-                            value={examFormData.plan_starttime}
-                            onChange={(e) => setExamFormData(prev => ({ ...prev, plan_starttime: e.target.value }))}
-                            className="text-sm border border-gray-300 rounded px-2 py-1"
-                          />
+                          <div>
+                            <input
+                              type="datetime-local"
+                              {...register('plan_starttime')}
+                              className={`text-sm border rounded px-2 py-1 ${errors.plan_starttime ? 'border-red-500' : 'border-gray-300'
+                                }`}
+                            />
+                            {errors.plan_starttime && (
+                              <p className="text-red-500 text-xs mt-1">{errors.plan_starttime.message}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Label className="text-sm text-gray-500">计划用时（分钟）：</Label>
-                          <input
-                            type="number"
-                            min="1"
-                            value={examFormData.plan_duration}
-                            onChange={(e) => setExamFormData(prev => ({ ...prev, plan_duration: parseInt(e.target.value) || 0 }))}
-                            className="text-sm border border-gray-300 rounded px-2 py-1 w-20"
-                          />
+                          <div>
+                            <input
+                              type="number"
+                              min="1"
+                              {...register('plan_duration', { valueAsNumber: true })}
+                              className={`text-sm border rounded px-2 py-1 w-20 ${errors.plan_duration ? 'border-red-500' : 'border-gray-300'
+                                }`}
+                            />
+                            {errors.plan_duration && (
+                              <p className="text-red-500 text-xs mt-1">{errors.plan_duration.message}</p>
+                            )}
+                          </div>
                         </div>
                         <div className="flex items-center space-x-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={handleSaveExam}
-                            disabled={updateExamMutation.isPending}
+                            onClick={handleSubmit(handleSaveExam)}
+                            disabled={isSubmitting || updateExamMutation.isPending}
                           >
                             <Save className="w-4 h-4 mr-1" />
                             保存
