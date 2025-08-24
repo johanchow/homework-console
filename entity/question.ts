@@ -1,8 +1,9 @@
 export enum QuestionType {
   choice = "choice",
-  qa = "qa",
   judge = "judge",
+  checking = "checking",
   reading = "reading",
+  talking = "talking",
   summary = "summary",
   show = "show",
 }
@@ -20,9 +21,10 @@ export enum QuestionSubject {
 
 export const questionTypeLabel = {
   [QuestionType.choice]: "选择题",
-  [QuestionType.qa]: "问答题",
   [QuestionType.judge]: "判断题",
+  [QuestionType.checking]: "写和做",
   [QuestionType.reading]: "阅读题",
+  [QuestionType.talking]: "口述题",
   [QuestionType.summary]: "总结题",
   [QuestionType.show]: "表演题",
 };
