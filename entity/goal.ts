@@ -14,8 +14,6 @@ export enum GoalStatus {
 export type Goal = {
   id: string;
   name: string;
-  /* subject: 学科 */
-  subject: string;
   /* status: 状态 */
   status: GoalStatus;
   /* AI出题提示词 */
