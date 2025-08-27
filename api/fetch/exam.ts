@@ -44,6 +44,12 @@ const getExam = async (id: string): Promise<Exam> => {
     }
   );
   console.log("fetch getExam response: ", data);
+
+  // 处理answer_json字段
+  if (data.answer_json) {
+    data.answer = JSON.parse(data.answer_json);
+  }
+
   return data;
 };
 
