@@ -54,7 +54,7 @@ export function GoalListClient() {
     if (!goalsData?.goals) return []
 
     return goalsData.goals.filter((goal: Goal) => {
-      const matchesSubject = selectedSubject === '全部' || goal.subject === selectedSubject
+      const matchesSubject = selectedSubject === '全部' || goal.status === selectedSubject
       return matchesSubject
     })
   }, [goalsData?.goals, selectedSubject])
@@ -212,7 +212,7 @@ export function GoalListClient() {
                 {/* 科目标签 */}
                 <div className="flex items-center justify-between">
                   <Badge variant="secondary" className="text-xs">
-                    {goal.subject}
+                    {goal.status}
                   </Badge>
                   <div className="flex items-center text-sm text-gray-500">
                     <BookOpen className="w-4 h-4 mr-1" />

@@ -30,10 +30,11 @@ export const questionTypeLabel = {
 };
 
 export const questionTypeIcon = {
-  [QuestionType.choice]: "🔍",
-  [QuestionType.qa]: "💬",
+  [QuestionType.checking]: "🔍",
+  [QuestionType.choice]: "💬",
   [QuestionType.judge]: "🔄",
   [QuestionType.reading]: "📖",
+  [QuestionType.talking]: "🗣️",
   [QuestionType.summary]: "📝",
   [QuestionType.show]: "🎭",
 };

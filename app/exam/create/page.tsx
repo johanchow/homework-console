@@ -170,7 +170,7 @@ export default function CreateExamPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{goal.name}</p>
-                        <p className="text-sm text-gray-500">{goal.subject}</p>
+                        <p className="text-sm text-gray-500">{goal.status}</p>
                       </div>
                       <Badge variant="secondary">{goal.status}</Badge>
                     </div>

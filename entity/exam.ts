@@ -28,6 +28,7 @@ export type Exam = {
   actual_starttime?: string;
   actual_duration?: number;
   answer?: Answer;
+  answer_json?: string;
   created_at: string;
   updated_at: string;
   finished_at?: string;

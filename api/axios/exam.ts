@@ -25,7 +25,11 @@ export const getExam = async (id: string): Promise<Exam> => {
   const response = await request.get(`/exam/get`, {
     params: { id },
   });
-  return response.data;
+  const examData = response.data;
+  examData.answer = examData.answer_json
+    ? JSON.parse(examData.answer_json)
+    : undefined;
+  return examData;
 };
 
 export const deleteExam = async (id: string): Promise<void> => {
