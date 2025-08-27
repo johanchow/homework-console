@@ -211,7 +211,6 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
   const getQuestionTypeLabel = (type: QuestionType) => {
     const typeMap = {
       [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
       [QuestionType.judge]: '判断题'
     }
     return typeMap[type as keyof typeof typeMap] || type

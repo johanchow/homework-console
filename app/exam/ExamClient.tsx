@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/component/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/component/table'
 
-import { Edit, Trash2, Plus, Search, Filter, X } from 'lucide-react'
+import { Edit, Trash2, Plus, Search, Filter, X, Eye } from 'lucide-react'
 import { listExams, deleteExam } from '@/api/axios/exam'
 import { Exam, ExamStatus } from '@/entity/exam'
 import { toast } from 'sonner'
@@ -277,6 +277,17 @@ export function ExamClient() {
                                   </AlertDialogFooter>
                                 </AlertDialogContent>
                               </AlertDialog>
+                              {exam.status === ExamStatus.COMPLETED && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => router.push(`/exam/${exam.id}/answer`)}
+                                  className="text-blue-600 hover:text-blue-700"
+                                  title="查看考试结果"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
