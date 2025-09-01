@@ -172,7 +172,6 @@ export default function CreateExamPage() {
                         <p className="font-medium">{goal.name}</p>
                         <p className="text-sm text-gray-500">{goal.status}</p>
                       </div>
-                      <Badge variant="secondary">{goal.status}</Badge>
                     </div>
                   </div>
                 </div>
