@@ -12,10 +12,9 @@ import {
 import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
-import { Badge } from '@/component/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/component/select'
 import { Plus, X, Save, Edit, Upload, Image, Video, Music, FileText } from 'lucide-react'
-import { Question, QuestionSubject, QuestionType, questionSubjectLabel } from '@/entity/question'
+import { Question, QuestionSubject, QuestionType, questionSubjectLabel, questionTypeLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
 
 interface QuestionEditModalProps {
@@ -212,7 +211,6 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
   const getQuestionTypeLabel = (type: QuestionType) => {
     const typeMap = {
       [QuestionType.choice]: '选择题',
-      [QuestionType.qa]: '问答题',
       [QuestionType.judge]: '判断题'
     }
     return typeMap[type as keyof typeof typeMap] || type
@@ -273,12 +271,11 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
                 <SelectValue placeholder="选择题目类型" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={QuestionType.choice}>选择题</SelectItem>
-                <SelectItem value={QuestionType.qa}>问答题</SelectItem>
-                <SelectItem value={QuestionType.judge}>判断题</SelectItem>
-                <SelectItem value={QuestionType.reading}>阅读题</SelectItem>
-                <SelectItem value={QuestionType.summary}>总结题</SelectItem>
-                <SelectItem value={QuestionType.show}>表演题</SelectItem>
+                {Object.values(QuestionType).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {questionTypeLabel[type]}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

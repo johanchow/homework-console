@@ -330,14 +330,6 @@ export function GoalClient({ goalId }: GoalClientProps) {
                 )}
               </div>
 
-              {/* 科目 */}
-              <div className="space-y-2">
-                <Label>学习科目</Label>
-                <Badge variant="secondary" className="text-sm">
-                  {goal.subject}
-                </Badge>
-              </div>
-
               {/* 状态 */}
               <div className="space-y-2">
                 <Label htmlFor="status">目标状态</Label>

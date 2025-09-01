@@ -25,7 +25,7 @@ export const getGoal = async (id: string): Promise<Goal> => {
 };
 
 export const createGoal = async (
-  data: Pick<Goal, "name" | "subject" | "creator_id">
+  data: Pick<Goal, "name" | "creator_id">
 ): Promise<Pick<Goal, "id">> => {
   const response = await request.post(`/goal/create`, data);
   return response.data;
