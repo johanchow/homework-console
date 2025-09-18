@@ -42,13 +42,13 @@ export function QuestionAdding({ currentQuestions, onQuestionsUpdated, prompt, o
         <CardContent>
           <Tabs defaultValue="import" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="import" className="flex items-center">
-                <Upload className="w-3 h-4 mr-1" />
-                智能录入
-              </TabsTrigger>
               <TabsTrigger value="batch" className="flex items-center">
                 <Upload className="w-3 h-4 mr-1" />
                 批量导入
+              </TabsTrigger>
+              <TabsTrigger value="import" className="flex items-center">
+                <Upload className="w-3 h-4 mr-1" />
+                手工录入
               </TabsTrigger>
               <TabsTrigger value="ai" className="flex items-center">
                 <Bot className="w-3 h-3 mr-1" />

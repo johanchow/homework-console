@@ -102,7 +102,7 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
             <label htmlFor="batch-file-upload">
               <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-sm text-gray-600 mb-4">
-                支持 JPG、PNG、PDF格式，可上传多个文件
+                支持 JPG、PNG、PDF、TXT格式，可上传多个文件
               </p>
             </label>
             <input

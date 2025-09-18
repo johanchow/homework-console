@@ -24,15 +24,21 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 // 表单验证schema
 const examCreateSchema = z.object({
   title: z.string().min(1, '请输入考试标题'),
-  plan_starttime: z.string().min(1, '请选择计划开始时间'),
+  plan_starttime: z.string().optional().refine(
+    (value) => !value || value.length > 0,
+    { message: '请选择计划开始时间' }
+  ),
   plan_duration: z.object({
     hours: z.number().min(0, '小时不能为负数'),
     minutes: z.number().min(0, '分钟不能为负数').max(59, '分钟不能超过59'),
-  }).refine(
-    (duration) => duration.hours > 0 || duration.minutes > 0,
+  }).optional().refine(
+    (duration) => !duration || (duration.hours > 0 || duration.minutes > 0),
     { message: '请设置计划用时' }
   ),
-  examinee_id: z.string().min(1, '请输入考生ID'),
+  examinee_id: z.string().optional().refine(
+    (value) => !value || value.length > 0,
+    { message: '请输入考生ID' }
+  ),
   questions: z.array(z.any()).min(1, '请至少添加一道题目'),
 })
 
@@ -95,8 +101,8 @@ export default function CreateExamPage() {
 
     const data = form.getValues()
 
-    // 如果没有goal_id，需要验证examinee_id
-    if (!goalId && !data.examinee_id.trim()) {
+    // 如果没有goal_id且没有填写examinee_id，需要提示
+    if (!goalId && (!data.examinee_id || !data.examinee_id.trim())) {
       toast.error('请输入考生ID')
       return
     }
@@ -115,13 +121,17 @@ export default function CreateExamPage() {
       const exam = {
         goal_id: goalId || '',
         question_ids: questions.map(question => question.id),
-        examinee_id: data.examinee_id,  // TODO goal的examinee_id
+        examinee_id: data.examinee_id || '',  // TODO goal的examinee_id
         status: ExamStatus.PENDING,
-        plan_duration: data.plan_duration.hours * 60 + data.plan_duration.minutes,
-        plan_starttime: data.plan_starttime,
+        plan_duration: data.plan_duration ? data.plan_duration.hours * 60 + data.plan_duration.minutes : 0,
+        plan_starttime: data.plan_starttime || '',
       }
       const examResp = await createExam(exam)
-      toast.success('考试创建成功')
+      if (data.examinee_id) {
+        toast.success('考试已经分配给考生')
+      } else {
+        toast.success('考试创建成功')
+      }
       router.push(`/exam/${examResp.id}`)
     } catch (error) {
       console.error('创建考试失败:', error)
@@ -135,116 +145,12 @@ export default function CreateExamPage() {
     <div className="max-w-4xl mx-auto p-6">
       <div className="space-y-6">
         <Form {...form}>
-          {/* 基本信息 */}
-          <Card>
-            <CardHeader>
-              <CardTitle>基本信息</CardTitle>
-              <CardDescription>
-                填写考试的基本信息
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 考试标题 */}
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>考试标题 <span className="text-red-500">*</span></FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="请输入考试标题"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Goal信息（如果有goal_id） */}
-              {goal && (
-                <div className="space-y-2">
-                  <Label>关联目标</Label>
-                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{goal.name}</p>
-                        <p className="text-sm text-gray-500">{goal.status}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 考生ID（如果没有goal_id） */}
-              {!goalId && (
-                <FormField
-                  control={form.control}
-                  name="examinee_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>考生ID <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="请输入考生ID"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-
-              {/* 开始时间和预计用时 */}
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="plan_starttime"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>计划开始时间 <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Calendar
-                          selected={field.value}
-                          onSelect={(date) => field.onChange(date || '')}
-                          placeholder="选择开始时间"
-                          precision="minute"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="plan_duration"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>计划用时 <span className="text-red-500">*</span></FormLabel>
-                      <FormControl>
-                        <Duration
-                          value={field.value}
-                          onChange={field.onChange}
-                          label=""
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           {/* 题目管理 */}
           <Card>
             <CardHeader>
               <CardTitle>题目管理 <span className="text-red-500">*</span></CardTitle>
               <CardDescription>
-                添加和管理考试题目
+                管理考试题目
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -299,6 +205,107 @@ export default function CreateExamPage() {
                   </FormItem>
                 )}
               />
+            </CardContent>
+          </Card>
+
+          {/* 基本信息 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>基本信息</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* 考试标题 */}
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>考试标题 <span className="text-red-500">*</span></FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="请输入考试标题"
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Goal信息（如果有goal_id） */}
+              {goal && (
+                <div className="space-y-2">
+                  <Label>关联目标</Label>
+                  <div className="p-3 border border-gray-200 rounded-lg bg-gray-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">{goal.name}</p>
+                        <p className="text-sm text-gray-500">{goal.status}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 考生ID（如果没有goal_id） */}
+              {!goalId && (
+                <FormField
+                  control={form.control}
+                  name="examinee_id"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>指派考生</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="请输入考生ID"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+
+              {/* 开始时间和预计用时 */}
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="plan_starttime"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>计划开始时间</FormLabel>
+                      <FormControl>
+                        <Calendar
+                          selected={field.value}
+                          onSelect={(date) => field.onChange(date || '')}
+                          placeholder="选择开始时间"
+                          precision="minute"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="plan_duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>计划用时</FormLabel>
+                      <FormControl>
+                        <Duration
+                          value={field.value}
+                          onChange={field.onChange}
+                          label=""
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </CardContent>
           </Card>
 
