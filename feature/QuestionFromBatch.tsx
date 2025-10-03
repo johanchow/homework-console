@@ -89,13 +89,6 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Upload className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold">批量导入题目</h3>
-      </div>
-
-
-
       <div className="space-y-4">
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 cursor-pointer">
           <div className="text-center">
