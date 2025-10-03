@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, X, Save, Edit, Upload, Image, Video, Music, FileText } from 'lucide-react'
 import { Question, QuestionSubject, QuestionType, questionSubjectLabel, questionTypeLabel } from '@/entity/question'
 import { uploadFile } from '@/api/axios/cos'
+import { extractQuestionMaterial } from '@/api/axios/question'
 
 interface QuestionEditModalProps {
   question?: Question
@@ -36,14 +37,64 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
     subject: '数学',
     type: QuestionType.choice,
     options: [],
-    material: '',
+    material: {
+      file_order: [],
+    },
     images: [],
     videos: [],
     audios: []
   })
 
-  // 文件上传相关状态
-  const [uploadingFiles, setUploadingFiles] = useState<{ [key: string]: boolean }>({})
+  // 获取material中的文件内容
+  const getMaterialFiles = () => {
+    if (!formData.material || !formData.material.file_order) return []
+
+    return formData.material.file_order.map((fileId: string) => ({
+      id: fileId,
+      content: (formData.material![fileId] as string) || ''
+    }))
+  }
+
+  // 更新material文件内容
+  const updateMaterialFile = (fileId: string, content: string) => {
+    setFormData(prev => {
+      if (!prev.material) {
+        return {
+          ...prev,
+          material: {
+            file_order: [fileId],
+            [fileId]: content
+          }
+        }
+      }
+
+      return {
+        ...prev,
+        material: {
+          ...prev.material,
+          [fileId]: content
+        }
+      }
+    })
+  }
+
+  // 删除material文件
+  const removeMaterialFile = (fileId: string) => {
+    setFormData(prev => {
+      if (!prev.material) return prev
+
+      const newMaterial = { ...prev.material }
+      delete newMaterial[fileId]
+
+      return {
+        ...prev,
+        material: {
+          ...newMaterial,
+          file_order: prev.material.file_order.filter((id: string) => id !== fileId)
+        }
+      }
+    })
+  }
 
   useEffect(() => {
     if (question) {
@@ -53,7 +104,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
         subject: question.subject,
         type: question.type,
         options: question.options || [],
-        material: question.material || '',
+        material: question.material,
         images: question.images || [],
         videos: question.videos || [],
         audios: question.audios || [],
@@ -120,9 +171,6 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
     const files = Array.from(event.target.files || [])
 
     for (const file of files) {
-      const fileId = `${type}-${Date.now()}-${Math.random()}`
-      setUploadingFiles(prev => ({ ...prev, [fileId]: true }))
-
       try {
         const result = await uploadFile(file)
         if (result.success) {
@@ -130,11 +178,41 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             ...prev,
             [type]: [...(prev[type] || []), result.url!]
           }))
+
+          // 如果是阅读题类型，调用extractQuestionMaterial提取文件内容
+          if (formData.type === QuestionType.reading) {
+            try {
+              const extractedContent = await extractQuestionMaterial(result.url!)
+              const fileId = `file-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+              setFormData(prev => {
+                if (!prev.material) {
+                  return {
+                    ...prev,
+                    material: {
+                      file_order: [fileId],
+                      [fileId]: extractedContent
+                    }
+                  }
+                }
+
+                return {
+                  ...prev,
+                  material: {
+                    ...prev.material,
+                    file_order: [...prev.material.file_order, fileId],
+                    [fileId]: extractedContent
+                  }
+                }
+              })
+            } catch (extractError) {
+              console.error('提取文件内容失败:', extractError)
+            }
+          }
         }
       } catch (error) {
         console.error('文件上传失败:', error)
       } finally {
-        setUploadingFiles(prev => ({ ...prev, [fileId]: false }))
       }
     }
 
@@ -197,6 +275,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
           subject: question.subject,
           type: question.type,
           options: question.options || [],
+          material: question.material,
           images: question.images || [],
           videos: question.videos || [],
           audios: question.audios || [],
@@ -313,20 +392,37 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             </div>
           )}
 
-          {/* 答案 */}
-          {formData.type === QuestionType.reading &&
-            <div className="space-y-2">
-              <Label htmlFor="answer">材料</Label>
-              <textarea
-                id="material"
-                value={formData.material}
-                onChange={(e) => handleInputChange('material', e.target.value)}
-                placeholder="输入材料内容"
-                rows={4}
-                className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
+          {/* 阅读题 */}
+          {formData.type === QuestionType.reading && (
+            <div className="space-y-3">
+              <Label htmlFor="material">材料</Label>
+              <div className="space-y-3">
+                {getMaterialFiles().map((file: { id: string; content: string }, index: number) => (
+                  <div key={file.id} className="border rounded-lg p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-medium">文件 {index + 1}</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeMaterialFile(file.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <textarea
+                      value={file.content}
+                      onChange={(e) => updateMaterialFile(file.id, e.target.value)}
+                      placeholder="输入材料内容"
+                      rows={4}
+                      className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          }
+          )}
 
           {/* 媒体文件 */}
           <div className="space-y-4">

@@ -97,3 +97,16 @@ export const analyzeQuestionMaterial = async (
 
   return response.data.question;
 };
+
+export const extractQuestionMaterial = async (
+  file_url: string
+): Promise<string> => {
+  const response = await request.post(
+    `/ai/extract-words`,
+    { file_url },
+    {
+      timeout: 10 * 1000,
+    }
+  );
+  return response.data.words;
+};

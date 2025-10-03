@@ -346,17 +346,36 @@ export function QuestionShowEdit({ question, onChange }: QuestionShowEditProps) 
       )}
 
       {/* 材料内容 */}
-      <div className="space-y-2">
-        <Label htmlFor="material">材料内容</Label>
-        <textarea
-          id="material"
-          value={editingQuestion.material || ''}
-          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => updateQuestion({ material: e.target.value })}
-          placeholder="请输入材料内容或AI自动填入"
-          rows={6}
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-        />
-      </div>
+      {editingQuestion.material && (
+        <div className="space-y-2">
+          <Label htmlFor="material">材料内容</Label>
+          <div className="space-y-3">
+            {editingQuestion.material.file_order?.map((fileId, index) => {
+              const content = editingQuestion.material![fileId] as string;
+              return (
+                <div key={fileId} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">文件 {index + 1}</Label>
+                  </div>
+                  <textarea
+                    value={content || ''}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                      const newMaterial = {
+                        ...editingQuestion.material!,
+                        [fileId]: e.target.value
+                      };
+                      updateQuestion({ material: newMaterial });
+                    }}
+                    placeholder="输入材料内容"
+                    rows={4}
+                    className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

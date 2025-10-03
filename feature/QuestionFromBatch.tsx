@@ -89,20 +89,13 @@ export function QuestionFromBatch({ onQuestionSelected }: QuestionFromBatchProps
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center space-x-2">
-        <Upload className="w-5 h-5 text-blue-600" />
-        <h3 className="text-lg font-semibold">批量导入题目</h3>
-      </div>
-
-
-
       <div className="space-y-4">
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-1 cursor-pointer">
           <div className="text-center">
             <label htmlFor="batch-file-upload">
               <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
               <p className="text-sm text-gray-600 mb-4">
-                支持 JPG、PNG、PDF格式，可上传多个文件
+                支持 JPG、PNG、PDF、TXT格式，可上传多个文件
               </p>
             </label>
             <input

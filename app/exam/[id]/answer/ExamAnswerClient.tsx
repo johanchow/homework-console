@@ -13,6 +13,7 @@ import { Question, QuestionType, questionTypeLabel } from '@/entity/question'
 import { Message, MessageRole } from '@/entity/message'
 import { getExam } from '@/api/axios/exam'
 import { toast } from 'sonner'
+import { AnswerShow } from '@/feature/AnswerShow'
 
 interface ExamAnswerClientProps {
   examId: string
@@ -34,9 +35,9 @@ export function ExamAnswerClient({ examId }: ExamAnswerClientProps) {
     toast.info('功能开发中...')
   }
 
-  const isAnswerCorrect = (questionId: string) => {
+  const isAnswered = (questionId: string) => {
     if (!exam?.answer) return false
-    const studentAnswer = exam.answer.answer?.[questionId]
+    const studentAnswer = exam.answer.answers?.[questionId]
 
     if (!studentAnswer) return false
 
@@ -142,9 +143,8 @@ export function ExamAnswerClient({ examId }: ExamAnswerClientProps) {
         <div className="space-y-6">
           {exam.questions.map((question, index) => {
             const questionId = question.id
-            const studentAnswer = exam.answer?.answer?.[questionId] || ''
+            const studentAnswer = exam.answer?.answers?.[questionId] || ''
             const messages = exam.answer?.messages?.[questionId] || []
-            const isCorrect = isAnswerCorrect(questionId)
 
             return (
               <Card key={questionId}>
@@ -155,7 +155,7 @@ export function ExamAnswerClient({ examId }: ExamAnswerClientProps) {
                       <Badge variant="secondary">
                         {questionTypeLabel[question.type as QuestionType] || question.type}
                       </Badge>
-                      {isCorrect ? (
+                      {isAnswered(questionId) ? (
                         <Badge className="bg-green-100 text-green-800">
                           <CheckCircle className="w-3 h-3 mr-1" />
                           正确
@@ -195,8 +195,8 @@ export function ExamAnswerClient({ examId }: ExamAnswerClientProps) {
                       {/* 学生答案 */}
                       <div>
                         <Label className="text-sm text-gray-500">学生答案</Label>
-                        <div className="mt-1 p-3 bg-gray-50 rounded-md">
-                          <p className="text-sm">{studentAnswer || '未作答'}</p>
+                        <div className="mt-1">
+                          <AnswerShow answerValue={studentAnswer} />
                         </div>
                       </div>
                     </div>
