@@ -4,7 +4,7 @@ import { Message } from "./message";
 
 export type Answer = {
   question: { [id: string]: Question };
-  answer: { [id: string]: string };
+  answers: { [id: string]: string };
   messages: { [id: string]: Message[] };
 };
 

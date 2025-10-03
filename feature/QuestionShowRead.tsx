@@ -251,24 +251,22 @@ export function QuestionShow({ question, onChange, isPreview }: QuestionShowProp
         />
       )}
 
-      {/* 最后一行：答案（可编辑） */}
+      {/* 最后一行：材料内容 */}
       {editingQuestion.material && (
         <div className="space-y-2">
-          <div className="flex items-start space-x-2">
-            <div className="text-sm font-medium text-gray-700 min-w-fit">材料：</div>
-            <div className="flex-1">
-              {!isPreview ? (
-                <div className="flex-1" dangerouslySetInnerHTML={{ __html: editingQuestion.material }} />
-              ) : (
-                <textarea
-                  value={editingQuestion.material || ''}
-                  placeholder="AI自动填入材料"
-                  rows={3}
-                  onChange={(e) => setEditingQuestion({ ...editingQuestion, material: e.target.value })}
-                  className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                />
-              )}
-            </div>
+          <div className="text-sm font-medium text-gray-700">材料：</div>
+          <div className="space-y-3">
+            {editingQuestion.material.file_order?.map((fileId, index) => {
+              const content = editingQuestion.material![fileId] as string;
+              return (
+                <div key={fileId} className="border rounded-lg p-4 space-y-2">
+                  <div className="text-sm font-medium text-gray-600">文件 {index + 1}</div>
+                  <div className="text-sm text-gray-800 whitespace-pre-wrap">
+                    {content}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

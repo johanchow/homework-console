@@ -64,7 +64,12 @@ export type Question = {
   audios?: string[];
   attachments?: string[];
   /* AI提取后的文件内容 */
-  material?: string;
+  // material?: string;
+  // {<file_id>: <content>, file_order: [<file_id>, ...]}
+  material?: {
+    file_order: string[];
+    [fileId: string]: string | string[];
+  };
   creator_id: string;
   created_at: string;
   updated_at: string;
