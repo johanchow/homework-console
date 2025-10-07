@@ -57,7 +57,7 @@ export const parseQuestionFromImages = async (params: {
       image_urls: params.image_urls,
     },
     {
-      timeout: 50 * 1000,
+      timeout: 20 * 1000,
     }
   );
   return response.data;
