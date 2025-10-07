@@ -49,3 +49,10 @@ export const updateExam = async (
   });
   return response.data;
 };
+
+export const copyExam = async (id: string): Promise<Pick<Exam, "id">> => {
+  const response = await request.post(`/exam/copy`, {
+    id,
+  });
+  return response.data;
+};

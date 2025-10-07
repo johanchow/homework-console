@@ -17,7 +17,7 @@ export enum ExamStatus {
 
 export type Exam = {
   id: string;
-  goal_id: string;
+  goal_id?: string;
   title: string;
   question_ids: string[];
   questions: Question[];
