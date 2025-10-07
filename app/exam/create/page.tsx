@@ -64,7 +64,7 @@ type ExamCreateFormData = z.infer<typeof examCreateSchema>
 export default function CreateExamPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const goalId = searchParams.get('goal_id')
+  const goalId = searchParams.get('goal_id') || undefined
   const { user } = useUserStore()
 
   const [goal, setGoal] = useState<Goal | null>(null)

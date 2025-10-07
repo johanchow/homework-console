@@ -589,28 +589,29 @@ export default function ExamEditPage() {
         </Card>
 
         {/* 导入题目模态框 */}
-        <QuestionImport
+        {/* <QuestionImport
           open={showQuestionImport}
           onOpenChange={setShowQuestionImport}
           onImport={handleImportQuestions}
           existingQuestionIds={questions.map(q => q.id)}
-        />
+        /> */}
 
         {/* 新建题目模态框 */}
-        {showQuestionAdding && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg max-w-6xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-              <div className="flex-1 overflow-auto p-6">
-                <QuestionAdding
-                  currentQuestions={[]}
-                  onQuestionsUpdated={(newQuestions) => {
-                    handleAddQuestions(newQuestions)
-                  }}
-                />
-              </div>
+        <Dialog open={showQuestionAdding} onOpenChange={setShowQuestionAdding}>
+          <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+            <DialogHeader>
+              <DialogTitle>新建题目</DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-auto">
+              <QuestionAdding
+                currentQuestions={[]}
+                onQuestionsUpdated={(newQuestions) => {
+                  handleAddQuestions(newQuestions)
+                }}
+              />
             </div>
-          </div>
-        )}
+          </DialogContent>
+        </Dialog>
 
         {/* 二维码模态框 */}
         <Dialog open={showQRModal} onOpenChange={setShowQRModal}>
