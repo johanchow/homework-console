@@ -166,10 +166,8 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
     }))
   }
 
-  // 文件上传处理
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'images' | 'videos' | 'audios') => {
-    const files = Array.from(event.target.files || [])
-
+  // 通用文件处理函数
+  const processFiles = async (files: File[], type: 'images' | 'videos' | 'audios') => {
     for (const file of files) {
       try {
         const result = await uploadFile(file)
@@ -212,12 +210,39 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
         }
       } catch (error) {
         console.error('文件上传失败:', error)
-      } finally {
+      }
+    }
+  }
+
+  // 文件上传处理
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, type: 'images' | 'videos' | 'audios') => {
+    const files = Array.from(event.target.files || [])
+    await processFiles(files, type)
+    // 清空 input 值，允许重复上传同一文件
+    event.target.value = ''
+  }
+
+  // 处理粘贴事件
+  const handlePaste = async (event: React.ClipboardEvent<HTMLDivElement>, type: 'images' | 'videos' | 'audios') => {
+    event.preventDefault()
+    const items = event.clipboardData?.items
+    if (!items) return
+
+    const files: File[] = []
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      // 检查是否为图片类型
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          files.push(file)
+        }
       }
     }
 
-    // 清空 input 值，允许重复上传同一文件
-    event.target.value = ''
+    if (files.length > 0) {
+      await processFiles(files, type)
+    }
   }
 
   const getFileIcon = (type: 'images' | 'videos' | 'audios') => {
@@ -431,7 +456,11 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             {/* 图片 */}
             <div className="space-y-2">
               <Label>图片文件</Label>
-              <div className="flex flex-wrap gap-2 items-center">
+              <div
+                className="flex flex-wrap gap-2 items-center p-3 border-2 border-dashed border-gray-200 rounded-lg focus-within:border-blue-400 transition-colors"
+                tabIndex={0}
+                onPaste={(e) => handlePaste(e, 'images')}
+              >
                 {/* 已有图片预览 */}
                 {(formData.images || []).map((image, index) => (
                   <div key={index} className="relative group">
@@ -454,8 +483,9 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
 
                 {/* 上传按钮 */}
                 <label htmlFor="image-upload" className="cursor-pointer">
-                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center hover:border-gray-400 transition-colors">
-                    <Plus className="w-6 h-6 text-gray-400" />
+                  <div className="w-16 h-16 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition-colors group">
+                    <Plus className="w-6 h-6 text-gray-400 group-hover:text-gray-600" />
+                    <span className="text-[10px] text-gray-400 mt-1">点击或粘贴</span>
                   </div>
                   <input
                     type="file"
@@ -472,7 +502,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             {/* 视频 */}
             <div className="space-y-2">
               <Label>视频文件</Label>
-              <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center p-3 border-2 border-dashed border-gray-200 rounded-lg">
                 {/* 已有视频预览 */}
                 {(formData.videos || []).map((video, index) => (
                   <div key={index} className="relative group">
@@ -511,7 +541,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
             {/* 音频 */}
             <div className="space-y-2">
               <Label>音频文件</Label>
-              <div className="flex flex-wrap gap-2 items-center">
+              <div className="flex flex-wrap gap-2 items-center p-3 border-2 border-dashed border-gray-200 rounded-lg">
                 {/* 已有音频预览 */}
                 {(formData.audios || []).map((audio, index) => (
                   <div key={index} className="relative group">

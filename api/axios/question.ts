@@ -49,12 +49,14 @@ export const generateQuestionsWithPrompt = async (params: {
 };
 
 export const parseQuestionFromImages = async (params: {
-  image_urls: string[];
+  image_urls?: string[];
+  text?: string;
 }): Promise<{ questions: Omit<Question, "id">[] }> => {
   const response = await request.post(
     `/ai/parse-questions-from-images`,
     {
       image_urls: params.image_urls,
+      text: params.text,
     },
     {
       timeout: 20 * 1000,
