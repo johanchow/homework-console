@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/component/card'
 import { Button } from '@/component/button'
-import { Target, Brain, Bot, Eye, CheckCircle } from 'lucide-react'
+import { Target, Brain, Bot, CheckCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export default function HomePage() {
@@ -24,13 +24,6 @@ export default function HomePage() {
       description: '实时解答疑问，个性化学习指导',
       icon: Bot,
       href: '/ai-tutor',
-      status: 'pending'
-    },
-    {
-      title: '远程答卷查看',
-      description: '实时查看学习进度，智能分析答题情况',
-      icon: Eye,
-      href: '/progress',
       status: 'pending'
     },
   ]
@@ -74,21 +67,20 @@ export default function HomePage() {
         <div className="relative">
           {/* 连接线 */}
           <div className="absolute top-8 left-0 right-0 h-0.5 bg-gray-200 hidden lg:block"></div>
-          
+
           {/* 步骤列表 */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-4">
             {features.map((feature, index) => (
               <div key={feature.title} className="relative">
                 {/* 桌面端连接线 */}
                 <div className="hidden lg:block absolute top-8 left-1/2 transform -translate-x-1/2 w-0.5 h-8 bg-gray-200"></div>
-                
+
                 {/* 步骤圆圈 */}
                 <div className="relative z-10 flex justify-center mb-6">
-                  <div className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${
-                    feature.status === 'active' 
-                      ? 'bg-blue-600 border-blue-600 text-white' 
-                      : 'bg-white border-gray-300 text-gray-400'
-                  }`}>
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${feature.status === 'active'
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : 'bg-white border-gray-300 text-gray-400'
+                    }`}>
                     {feature.status === 'active' ? (
                       <CheckCircle className="w-8 h-8" />
                     ) : (
@@ -104,17 +96,16 @@ export default function HomePage() {
                       步骤 {index + 1}
                     </span>
                   </div>
-                  <h3 className={`text-lg font-semibold mb-2 ${
-                    feature.status === 'active' ? 'text-blue-600' : 'text-gray-900'
-                  }`}>
+                  <h3 className={`text-lg font-semibold mb-2 ${feature.status === 'active' ? 'text-blue-600' : 'text-gray-900'
+                    }`}>
                     {feature.title}
                   </h3>
                   <p className="text-sm text-gray-600 mb-4 leading-relaxed">
                     {feature.description}
                   </p>
-                  <Button 
-                    variant={feature.status === 'active' ? 'default' : 'outline'} 
-                    size="sm" 
+                  <Button
+                    variant={feature.status === 'active' ? 'default' : 'outline'}
+                    size="sm"
                     asChild
                     className="w-full"
                   >

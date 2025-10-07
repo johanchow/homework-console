@@ -12,9 +12,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/component/button'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { ArrowLeft, Save, Trash2, Edit, Calendar, Plus, Download } from 'lucide-react'
+import { ArrowLeft, Save, Trash2, Edit, Calendar, Plus, Download, QrCode, Copy } from 'lucide-react'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/component/tooltip'
 import { Popover, PopoverContent, PopoverTrigger } from '@/component/popover'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/component/dialog'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { Exam, ExamStatus } from '@/entity/exam'
 import { Question } from '@/entity/question'
@@ -24,9 +25,10 @@ import { QuestionShow } from '@/feature/QuestionShowRead'
 import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { QuestionAdding } from '@/feature/QuestionAdding'
 import { QuestionImport } from '@/feature/QuestionImport'
-import { getExam, updateExam } from '@/api/axios/exam'
+import { getExam, updateExam, copyExam } from '@/api/axios/exam'
 import { updateQuestion } from '@/api/axios/question'
 import { toLocalDateTimeString } from '@/util/formatter'
+import QRCode from 'qrcode'
 
 // 定义表单验证模式
 const examFormSchema = z.object({
@@ -46,6 +48,9 @@ export default function ExamEditPage() {
 
   const [questions, setQuestions] = useState<Question[]>([])
   const [isEditingExam, setIsEditingExam] = useState(false)
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>('')
+  const [showCopyConfirm, setShowCopyConfirm] = useState(false)
 
   // 使用 react-hook-form
   const {
@@ -116,6 +121,23 @@ export default function ExamEditPage() {
     }
   })
 
+  // 复制考试
+  const copyExamMutation = useMutation({
+    mutationFn: async (examId: string) => {
+      return await copyExam(examId)
+    },
+    onSuccess: (newExam) => {
+      toast.success('考试复制成功')
+      setShowCopyConfirm(false)
+      // 跳转到新的考试页面
+      router.push(`/exam/${newExam.id}`)
+    },
+    onError: () => {
+      toast.error('复制失败，请重试')
+      setShowCopyConfirm(false)
+    }
+  })
+
   // 当考试数据加载完成时，初始化状态
   useEffect(() => {
     console.log('exam change: ', exam);
@@ -168,6 +190,25 @@ export default function ExamEditPage() {
 
   const handleCancelEdit = () => {
     setIsEditingExam(false)
+  }
+
+  const generateQRCode = async (examId: string) => {
+    try {
+      const qrUrl = `${window.location.origin}/qrcode/exam?id=${examId}`
+      const qrDataUrl = await QRCode.toDataURL(qrUrl, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#000000',
+          light: '#FFFFFF'
+        }
+      })
+      setQrCodeDataUrl(qrDataUrl)
+      setShowQRModal(true)
+    } catch (error) {
+      console.error('生成二维码失败:', error)
+      toast.error('生成二维码失败')
+    }
   }
 
   const handleImportQuestions = async (questionIds: string[]) => {
@@ -261,20 +302,38 @@ export default function ExamEditPage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>考试信息</span>
-              {exam.status === ExamStatus.PENDING && (
+              <div className="flex items-center space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={handleEditExam}
-                  disabled={isEditingExam}
+                  onClick={() => generateQRCode(examId)}
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  编辑
+                  <QrCode className="w-4 h-4 mr-2" />
+                  二维码
                 </Button>
-              )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCopyConfirm(true)}
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  复制
+                </Button>
+                {exam.status === ExamStatus.PENDING && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleEditExam}
+                    disabled={isEditingExam}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    编辑
+                  </Button>
+                )}
+              </div>
             </CardTitle>
             <CardDescription>
-              {exam.status === ExamStatus.PENDING ? '编辑考试信息（仅未开始状态可编辑）' : '查看考试信息'}
+              {exam.status === ExamStatus.PENDING ? '编辑考试信息(仅未开始状态可编辑)' : '查看考试信息'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -552,6 +611,60 @@ export default function ExamEditPage() {
             </div>
           </div>
         )}
+
+        {/* 二维码模态框 */}
+        <Dialog open={showQRModal} onOpenChange={setShowQRModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>考试二维码</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col items-center space-y-4 py-4">
+              <p className="text-sm text-gray-600 text-center">
+                用APP扫描后关联获取本试卷
+              </p>
+              {qrCodeDataUrl && (
+                <div className="p-4 bg-white rounded-lg border">
+                  <img
+                    src={qrCodeDataUrl}
+                    alt="考试二维码"
+                    className="w-64 h-64"
+                  />
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* 复制确认模态框 */}
+        <Dialog open={showCopyConfirm} onOpenChange={setShowCopyConfirm}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>确认复制考试</DialogTitle>
+            </DialogHeader>
+            <div className="flex flex-col space-y-4 py-4">
+              <p className="text-sm text-gray-600 text-center">
+                是否要复制1份全新考试？
+              </p>
+              <div className="flex items-center justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCopyConfirm(false)}
+                >
+                  取消
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => copyExamMutation.mutate(examId)}
+                  disabled={copyExamMutation.isPending}
+                >
+                  {copyExamMutation.isPending ? '复制中...' : '是'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   )

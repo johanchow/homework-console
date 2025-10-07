@@ -11,15 +11,36 @@ import { Button } from '@/component/button'
 import { Input } from '@/component/input'
 import { Label } from '@/component/label'
 import { Badge } from '@/component/badge'
-import { Trash2, ArrowLeft } from 'lucide-react'
+import { Trash2, ArrowLeft, Edit } from 'lucide-react'
 import Link from 'next/link'
 import { QuestionAdding } from '@/feature/QuestionAdding'
+import { QuestionEditModal } from '@/feature/QuestionEditModal'
 import { useUserStore } from '@/store/useUserStore'
 import { Exam, ExamStatus, Question, Goal, questionTypeIcon, questionTypeLabel } from '@/entity'
 import { createExam, getGoal, batchCreateQuestions } from '@/api/axios'
 import { Duration } from '@/component/duration'
 import Calendar from '@/component/calendar'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/component/form'
+
+// 获取当前日期的格式化字符串
+const getCurrentDateString = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}考试`
+}
+
+// 获取当前时间的格式化字符串
+const getCurrentDateTimeString = () => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  const hours = String(now.getHours()).padStart(2, '0')
+  const minutes = String(now.getMinutes()).padStart(2, '0')
+  return `${year}-${month}-${day}T${hours}:${minutes}`
+}
 
 // 表单验证schema
 const examCreateSchema = z.object({
@@ -35,10 +56,6 @@ const examCreateSchema = z.object({
     (duration) => !duration || (duration.hours > 0 || duration.minutes > 0),
     { message: '请设置计划用时' }
   ),
-  examinee_id: z.string().optional().refine(
-    (value) => !value || value.length > 0,
-    { message: '请输入考生ID' }
-  ),
   questions: z.array(z.any()).min(1, '请至少添加一道题目'),
 })
 
@@ -52,14 +69,14 @@ export default function CreateExamPage() {
 
   const [goal, setGoal] = useState<Goal | null>(null)
   const [loading, setLoading] = useState(false)
+  const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
 
   const form = useForm<ExamCreateFormData>({
     resolver: zodResolver(examCreateSchema),
     defaultValues: {
-      title: '',
-      plan_starttime: '',
+      title: getCurrentDateString(),
+      plan_starttime: getCurrentDateTimeString(),
       plan_duration: { hours: 0, minutes: 30 },
-      examinee_id: '',
       questions: [],
     },
   })
@@ -71,9 +88,8 @@ export default function CreateExamPage() {
         try {
           const goalData = await getGoal(goalId)
           setGoal(goalData)
-          // 如果有goal，默认使用当前用户作为examinee
-          form.setValue('examinee_id', user?.id || '')
-          form.setValue('title', goalData.name || '')
+          // 如果有goal，使用goal的名称作为标题
+          form.setValue('title', goalData.name || getCurrentDateString())
         } catch (error) {
           console.error('获取目标详情失败:', error)
           toast.error('获取目标详情失败')
@@ -93,6 +109,24 @@ export default function CreateExamPage() {
     form.setValue('questions', updatedQuestions)
   }
 
+  const handleEditQuestion = (questionId: string) => {
+    const currentQuestions = form.getValues('questions')
+    const question = currentQuestions.find((q: Question) => q.id === questionId)
+    if (question) {
+      setEditingQuestion(question)
+    }
+  }
+
+  const handleSaveEditedQuestion = (editedQuestion: Question) => {
+    const currentQuestions = form.getValues('questions')
+    const updatedQuestions = currentQuestions.map((q: Question) =>
+      q.id === editedQuestion.id ? editedQuestion : q
+    )
+    form.setValue('questions', updatedQuestions)
+    setEditingQuestion(null)
+    toast.success('题目更新成功')
+  }
+
   const handleSubmit = async () => {
     const isValid = await form.trigger()
     if (!isValid) {
@@ -101,11 +135,7 @@ export default function CreateExamPage() {
 
     const data = form.getValues()
 
-    // 如果没有goal_id且没有填写examinee_id，需要提示
-    if (!goalId && (!data.examinee_id || !data.examinee_id.trim())) {
-      toast.error('请输入考生ID')
-      return
-    }
+    // 移除考生ID验证逻辑
 
     setLoading(true)
     // 先创建考试，再创建考试题目
@@ -119,19 +149,15 @@ export default function CreateExamPage() {
       const { questions } = await batchCreateQuestions(newQuestions)
       // 2. 再创建考试
       const exam = {
-        goal_id: goalId || '',
+        goal_id: goalId,
         question_ids: questions.map(question => question.id),
-        examinee_id: data.examinee_id || '',  // TODO goal的examinee_id
+        examinee_id: '',  // 移除考生ID字段
         status: ExamStatus.PENDING,
         plan_duration: data.plan_duration ? data.plan_duration.hours * 60 + data.plan_duration.minutes : 0,
         plan_starttime: data.plan_starttime || '',
       }
       const examResp = await createExam(exam)
-      if (data.examinee_id) {
-        toast.success('考试已经分配给考生')
-      } else {
-        toast.success('考试创建成功')
-      }
+      toast.success('考试创建成功')
       router.push(`/exam/${examResp.id}`)
     } catch (error) {
       console.error('创建考试失败:', error)
@@ -176,14 +202,26 @@ export default function CreateExamPage() {
                             </div>
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteQuestion(question.id)}
-                          className="text-red-500 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditQuestion(question.id)}
+                            className="text-blue-500 hover:text-blue-700"
+                            title="编辑题目"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteQuestion(question.id)}
+                            className="text-red-500 hover:text-red-700"
+                            title="删除题目"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -247,25 +285,7 @@ export default function CreateExamPage() {
                 </div>
               )}
 
-              {/* 考生ID（如果没有goal_id） */}
-              {!goalId && (
-                <FormField
-                  control={form.control}
-                  name="examinee_id"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>指派考生</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="请输入考生ID"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
+              {/* 移除考生ID输入项 */}
 
               {/* 开始时间和预计用时 */}
               <div className="grid grid-cols-2 gap-4">
@@ -321,6 +341,24 @@ export default function CreateExamPage() {
             </Button>
           </div>
         </Form>
+
+        {/* 编辑题目模态框 */}
+        {editingQuestion && (
+          <QuestionEditModal
+            question={editingQuestion}
+            onSave={handleSaveEditedQuestion}
+            open={!!editingQuestion}
+            onOpenChange={(open) => {
+              if (!open) {
+                setEditingQuestion(null)
+              }
+            }}
+          >
+            <div className="hidden">
+              {/* 隐藏的触发器，用于自动打开 modal */}
+            </div>
+          </QuestionEditModal>
+        )}
       </div>
     </div>
   )

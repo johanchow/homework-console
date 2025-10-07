@@ -104,7 +104,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
         subject: question.subject,
         type: question.type,
         options: question.options || [],
-        material: question.material,
+        material: question.material || { file_order: [] },
         images: question.images || [],
         videos: question.videos || [],
         audios: question.audios || [],
@@ -200,7 +200,7 @@ export function QuestionEditModal({ question, onSave, children, open, onOpenChan
                   ...prev,
                   material: {
                     ...prev.material,
-                    file_order: [...prev.material.file_order, fileId],
+                    file_order: [...prev.material.file_order || [], fileId],
                     [fileId]: extractedContent
                   }
                 }
